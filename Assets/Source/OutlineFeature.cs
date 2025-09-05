@@ -1,5 +1,6 @@
 // https://docs.unity.cn/cn/Packages-cn/com.unity.render-pipelines.universal@14.1/manual/renderer-features/create-custom-renderer-feature.html
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -16,19 +17,23 @@ public class OutlineFeature : ScriptableRendererFeature
             new ShaderTagId("UniversalForwardOnly"),
         };
         // Shader 属性 ID。
-        private static readonly int _shaderPropOutlineMask = Shader.PropertyToID("_OutlineMask");
+        private static readonly int _outlineMaskId = Shader.PropertyToID("_OutlineMask");
+        private static readonly int _outlineColorId = Shader.PropertyToID("_OutlineColor");
+        private static readonly int _outlineWidthId = Shader.PropertyToID("_OutlineWidth");
         
+        private OutlineSettings _defaultSettings;
         private readonly Material _outlineMaterial;
         private readonly FilteringSettings _filteringSettings;
         private readonly MaterialPropertyBlock _propertyBlock;
         private RTHandle _outlineMaskRT;
         
-        public OutlinePass(Material outlineMaterial)
+        public OutlinePass(Material outlineMaterial, OutlineSettings defaultSettings)
         {
             // Configures where the render pass should be injected.
             renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
             
             _outlineMaterial = outlineMaterial;
+            _defaultSettings = defaultSettings;
             
             // 只渲染指定RenderingLayer的物体。
             // TODO: 目前硬代码Outline Layer为2，后续可以通过Feature的参数来设置。
@@ -70,6 +75,8 @@ public class OutlineFeature : ScriptableRendererFeature
         // You don't have to call ScriptableRenderContext.submit, the render pipeline will call it at specific points in the pipeline.
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+            UpdateSettings();
+            
             var cmd = CommandBufferPool.Get("Outline Command");
             
             // ---- 绘制目标 RT ----//
@@ -84,7 +91,7 @@ public class OutlineFeature : ScriptableRendererFeature
             // ---- 绘制外描边 ----//
             // 设置绘制目标为当前相机的渲染目标。
             cmd.SetRenderTarget(renderingData.cameraData.renderer.cameraColorTargetHandle);
-            _propertyBlock.SetTexture(_shaderPropOutlineMask, _outlineMaskRT);
+            _propertyBlock.SetTexture(_outlineMaskId, _outlineMaskRT);
             cmd.DrawProcedural(Matrix4x4.identity, _outlineMaterial, 0, MeshTopology.Triangles, 3, 1, _propertyBlock);
             
             context.ExecuteCommandBuffer(cmd);
@@ -97,27 +104,41 @@ public class OutlineFeature : ScriptableRendererFeature
         {
             // Debug.Log("OutlineRenderPass OnCameraCleanup");
         }
+        
+        private void UpdateSettings()
+        {
+            if (_outlineMaterial == null) return;
+
+            // 获取 Volume 设置或使用默认值
+            var volumeComponent = VolumeManager.instance.stack.GetComponent<OutlineVolumeComponent>();
+            bool isActive = volumeComponent != null && volumeComponent.isActive.value;
+            
+            Color outlineColor = isActive && volumeComponent.outlineColor.overrideState ?
+                volumeComponent.outlineColor.value : _defaultSettings.outlineColor;
+            float outlineWidth = isActive && volumeComponent.outlineWidth.overrideState ?
+                volumeComponent.outlineWidth.value : _defaultSettings.outlineWidth;
+            
+            _outlineMaterial.SetColor(_outlineColorId, outlineColor);
+            _outlineMaterial.SetFloat(_outlineWidthId, outlineWidth);
+        }
     }
 
-    [SerializeField]
-    private Material outlineMaterial;
+    [SerializeField] private Shader shader;
+    [SerializeField] private OutlineSettings settings;
+    private Material _outlineMaterial;
     private OutlinePass _outlinePass;
     
-    /// <summary>
-    /// 确认材质和Shader是否有效。
-    /// </summary>
-    private bool IsMaterialValid => outlineMaterial && outlineMaterial.shader && outlineMaterial.shader.isSupported;
-
     /// <inheritdoc/>
     public override void Create()
     {
-        if (!IsMaterialValid)
+        if (!shader || !shader.isSupported)
         {
-            Debug.LogWarningFormat("Missing Outline Material. {0} render pass will not execute. Check for missing reference in the assigned renderer.", GetType().Name);
+            Debug.LogWarning("OutlineFeature: Missing or unsupported Outline Shader.");
             return;
         }
         
-        _outlinePass = new OutlinePass(outlineMaterial);
+        _outlineMaterial = new Material(shader);
+        _outlinePass = new OutlinePass(_outlineMaterial, settings);
     }
 
     // Here you can inject one or multiple render passes in the renderer.
@@ -126,7 +147,7 @@ public class OutlineFeature : ScriptableRendererFeature
     {
         if (_outlinePass == null)
         {
-            Debug.LogWarningFormat("Missing Outline Pass. {0} render pass will not execute. Check for missing reference in the assigned renderer.", GetType().Name);
+            // Debug.LogWarning($"OutlineFeature: Missing Outline Pass. {GetType().Name} render pass will not execute.");
             return;
         }
         
@@ -142,4 +163,10 @@ public class OutlineFeature : ScriptableRendererFeature
     }
 }
 
-
+[Serializable]
+public class OutlineSettings
+{
+    [ColorUsage(true, true)]
+    public Color outlineColor = Color.white;
+    [Range(0.001f, 0.01f)] public float outlineWidth = 0.002f;
+}
