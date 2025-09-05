@@ -23,7 +23,7 @@ public class OutlineFeature : ScriptableRendererFeature
         
         private OutlineSettings _defaultSettings;
         private readonly Material _outlineMaterial;
-        private readonly FilteringSettings _filteringSettings;
+        private FilteringSettings _filteringSettings;
         private readonly MaterialPropertyBlock _propertyBlock;
         private RTHandle _outlineMaskRT;
         
@@ -37,7 +37,7 @@ public class OutlineFeature : ScriptableRendererFeature
             
             // 只渲染指定RenderingLayer的物体。
             // TODO: 目前硬代码Outline Layer为2，后续可以通过Feature的参数来设置。
-            _filteringSettings = new FilteringSettings(RenderQueueRange.all, renderingLayerMask: 2);
+            _filteringSettings = new FilteringSettings(RenderQueueRange.all, renderingLayerMask: (uint)_defaultSettings.outlineRenderingLayerMask);
             _propertyBlock = new MaterialPropertyBlock();
         }
         
@@ -117,9 +117,18 @@ public class OutlineFeature : ScriptableRendererFeature
                 volumeComponent.outlineColor.value : _defaultSettings.outlineColor;
             float outlineWidth = isActive && volumeComponent.outlineWidth.overrideState ?
                 volumeComponent.outlineWidth.value : _defaultSettings.outlineWidth;
+            uint outlineRenderingLayerMask = isActive && volumeComponent.outlineRenderingLayerMask.overrideState ?
+                volumeComponent.outlineRenderingLayerMask.value : (uint)_defaultSettings.outlineRenderingLayerMask;
+
+            if (outlineRenderingLayerMask != _filteringSettings.renderingLayerMask)
+            {
+                // 更新过滤设置
+                _filteringSettings.renderingLayerMask = outlineRenderingLayerMask;
+            }
             
             _outlineMaterial.SetColor(_outlineColorId, outlineColor);
             _outlineMaterial.SetFloat(_outlineWidthId, outlineWidth);
+            
         }
     }
 
@@ -169,4 +178,5 @@ public class OutlineSettings
     [ColorUsage(true, true)]
     public Color outlineColor = Color.white;
     [Range(0.001f, 0.01f)] public float outlineWidth = 0.002f;
+    public ERenderingLayerMask outlineRenderingLayerMask = ERenderingLayerMask.Outline;
 }
