@@ -1,3 +1,6 @@
+// https://docs.unity.cn/cn/Packages-cn/com.unity.render-pipelines.universal@14.1/manual/renderer-features/create-custom-renderer-feature.html
+
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -6,15 +9,31 @@ public class OutlineFeature : ScriptableRendererFeature
 {
     class OutlinePass : ScriptableRenderPass
     {
-        private Material _outlineMaterial;
+        private static readonly List<ShaderTagId> _shaderTagIds = new List<ShaderTagId>
+        {
+            new ShaderTagId("SRPDefaultUnlit"),
+            new ShaderTagId("UniversalForward"),
+            new ShaderTagId("UniversalForwardOnly"),
+        };
+        // Shader 属性 ID。
+        private static readonly int _shaderPropOutlineMask = Shader.PropertyToID("_OutlineMask");
+        
+        private readonly Material _outlineMaterial;
+        private readonly FilteringSettings _filteringSettings;
+        private readonly MaterialPropertyBlock _propertyBlock;
         private RTHandle _outlineMaskRT;
         
         public OutlinePass(Material outlineMaterial)
         {
-            _outlineMaterial = outlineMaterial;
-            
             // Configures where the render pass should be injected.
             renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
+            
+            _outlineMaterial = outlineMaterial;
+            
+            // 只渲染指定RenderingLayer的物体。
+            // TODO: 目前硬代码Outline Layer为2，后续可以通过Feature的参数来设置。
+            _filteringSettings = new FilteringSettings(RenderQueueRange.all, renderingLayerMask: 2);
+            _propertyBlock = new MaterialPropertyBlock();
         }
         
         /// <summary>
@@ -53,8 +72,20 @@ public class OutlineFeature : ScriptableRendererFeature
         {
             var cmd = CommandBufferPool.Get("Outline Command");
             
-            // TODO: cmd
+            // ---- 绘制目标 RT ----//
+            // 设置绘制目标为_outlineMaskRT。并在渲染前清空RT。
+            cmd.SetRenderTarget(_outlineMaskRT);
+            cmd.ClearRenderTarget(true, true, Color.clear);
+            var drawingSettings = CreateDrawingSettings(_shaderTagIds, ref  renderingData, SortingCriteria.None);
+            var rendererListParams = new RendererListParams(renderingData.cullResults, drawingSettings, _filteringSettings);
+            var list = context.CreateRendererList(ref rendererListParams);
+            cmd.DrawRendererList(list);
             
+            // ---- 绘制外描边 ----//
+            // 设置绘制目标为当前相机的渲染目标。
+            cmd.SetRenderTarget(renderingData.cameraData.renderer.cameraColorTargetHandle);
+            _propertyBlock.SetTexture(_shaderPropOutlineMask, _outlineMaskRT);
+            cmd.DrawProcedural(Matrix4x4.identity, _outlineMaterial, 0, MeshTopology.Triangles, 3, 1, _propertyBlock);
             
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
@@ -64,7 +95,7 @@ public class OutlineFeature : ScriptableRendererFeature
         // Cleanup any allocated resources that were created during the execution of this render pass.
         public override void OnCameraCleanup(CommandBuffer cmd)
         {
-            Debug.Log("OutlineRenderPass OnCameraCleanup");
+            // Debug.Log("OutlineRenderPass OnCameraCleanup");
         }
     }
 
@@ -87,8 +118,6 @@ public class OutlineFeature : ScriptableRendererFeature
         }
         
         _outlinePass = new OutlinePass(outlineMaterial);
-
-
     }
 
     // Here you can inject one or multiple render passes in the renderer.
