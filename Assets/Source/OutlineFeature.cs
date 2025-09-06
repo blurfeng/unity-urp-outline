@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using Volumes;
 
 public class OutlineFeature : ScriptableRendererFeature
 {
@@ -110,7 +111,7 @@ public class OutlineFeature : ScriptableRendererFeature
             if (_outlineMaterial == null) return;
 
             // 获取 Volume 设置或使用默认值
-            var volumeComponent = VolumeManager.instance.stack.GetComponent<OutlineVolumeComponent>();
+            var volumeComponent = VolumeManager.instance.stack.GetComponent<Outline>();
             bool isActive = volumeComponent != null && volumeComponent.isActive.value;
             
             Color outlineColor = isActive && volumeComponent.outlineColor.overrideState ?

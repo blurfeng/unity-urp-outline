@@ -75,7 +75,7 @@ MonoBehaviour:
   rounded:
     m_OverrideState: 0
     m_Value: 0
---- !u!114 &-2277590927649620708
+--- !u!114 &-847106528426843403
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -85,7 +85,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 46faf778f0b14409be18ff13ef82f88b, type: 3}
-  m_Name: OutlineVolumeComponent
+  m_Name: Outline
   m_EditorClassIdentifier: 
   active: 1
   isActive:
@@ -93,10 +93,10 @@ MonoBehaviour:
     m_Value: 1
   outlineColor:
     m_OverrideState: 1
-    m_Value: {r: 7.95719, g: 8, b: 2.9056602, a: 1}
+    m_Value: {r: 5.3403134, g: 5.3403134, b: 2.0907829, a: 1}
   outlineWidth:
     m_OverrideState: 1
-    m_Value: 0.00439
+    m_Value: 0.002
   outlineRenderingLayerMask:
     m_OverrideState: 1
     m_Value: 2
@@ -116,7 +116,7 @@ MonoBehaviour:
   - {fileID: 849379129802519247}
   - {fileID: -7893295128165547882}
   - {fileID: -7011558710299706105}
-  - {fileID: -2277590927649620708}
+  - {fileID: -847106528426843403}
 --- !u!114 &849379129802519247
 MonoBehaviour:
   m_ObjectHideFlags: 3
