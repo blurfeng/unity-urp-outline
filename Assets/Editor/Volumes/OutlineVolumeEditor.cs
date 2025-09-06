@@ -1,12 +1,11 @@
 ﻿using UnityEditor;
 using UnityEditor.Rendering;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Volumes
 {
     [CustomEditor(typeof(Outline))]
-    public class OutlineVolumeComponentEditor : VolumeComponentEditor
+    public class OutlineVolumeEditor : VolumeComponentEditor
     {
         public override void OnEnable()
         {
