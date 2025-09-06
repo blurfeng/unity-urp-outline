@@ -33,7 +33,7 @@ namespace Volumes
                 EditorGUI.BeginDisabledGroup(!comp.outlineRenderingLayerMask.overrideState);
                 // MaskField。
                 int mask = (int)comp.outlineRenderingLayerMask.value;
-                mask = EditorGUILayout.MaskField("Outline Rendering Layer Mask", mask, RenderingLayerMaskUtil.layerNames);
+                mask = EditorGUILayout.MaskField("Outline Rendering Layer Mask", mask, RenderingLayerMaskUtil.LayerNames);
                 comp.outlineRenderingLayerMask.value = unchecked((uint)mask);
                 EditorGUI.EndDisabledGroup();
             

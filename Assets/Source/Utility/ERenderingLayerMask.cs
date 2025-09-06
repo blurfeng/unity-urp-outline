@@ -8,7 +8,7 @@
 [Flags]
 public enum ERenderingLayerMask
 {
-    LightLayerDefault = 1 << 0,
+    Default = 1 << 0,
     Outline = 1 << 1,
     Layer2 = 1 << 2,
     Layer3 = 1 << 3,
@@ -17,11 +17,11 @@ public enum ERenderingLayerMask
 
 public static class RenderingLayerMaskUtil
 {
-    public static readonly string[] layerNames;
-    public static bool IsHaveLayer => layerNames.Length > 0;
+    public static readonly string[] LayerNames;
+    public static bool IsHaveLayer => LayerNames.Length > 0;
     
     static RenderingLayerMaskUtil()
     {
-        layerNames = typeof(ERenderingLayerMask).GetEnumNames();
+        LayerNames = typeof(ERenderingLayerMask).GetEnumNames();
     }
 }
