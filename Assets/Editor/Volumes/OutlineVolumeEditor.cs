@@ -21,7 +21,7 @@ namespace Volumes
 
             var comp = (Outline)target;
         
-            if (RenderingLayerMaskUtil.IsHaveLayer)
+            if (RenderingLayerUtil.IsHaveLayer)
             {
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Space(13f);
@@ -33,7 +33,7 @@ namespace Volumes
                 EditorGUI.BeginDisabledGroup(!comp.outlineRenderingLayerMask.overrideState);
                 // MaskField。
                 int mask = (int)comp.outlineRenderingLayerMask.value;
-                mask = EditorGUILayout.MaskField("Outline Rendering Layer Mask", mask, RenderingLayerMaskUtil.LayerNames);
+                mask = EditorGUILayout.MaskField("Outline Rendering Layer Mask", mask, RenderingLayerUtil.RenderingLayerNames);
                 comp.outlineRenderingLayerMask.value = unchecked((uint)mask);
                 EditorGUI.EndDisabledGroup();
             

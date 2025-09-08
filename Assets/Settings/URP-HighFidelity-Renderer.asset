@@ -16,7 +16,7 @@ MonoBehaviour:
   shader: {fileID: 4800000, guid: 568297c4b9d9c2842b8ffc4fd7840431, type: 3}
   settings:
     outlineColor: {r: 8.77774, g: 8.77774, b: 8.77774, a: 1}
-    outlineWidth: 0.00413
+    outlineWidth: 0.00277
     outlineRenderingLayerMask: 2
 --- !u!114 &-1878332245247344467
 MonoBehaviour:
