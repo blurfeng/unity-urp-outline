@@ -16,7 +16,8 @@
 
 <p align="center">
   📥
-  <a href="#インストール">インストール</a>
+  <a href="#インストール">インストール</a> |
+  <a href="#ダウンロード">ダウンロード</a>
 </p>
 
 ## プロジェクト概要
@@ -44,6 +45,13 @@ https://github.com/blurfeng/unity-urp-outline.git?path=/Assets/Plugins/FsOutline
 ```
 git clone https://github.com/blurfeng/unity-urp-outline.git
 ```
+
+## ダウンロード
+UPM でのインストール以外に、GitHub Releases からパッケージをダウンロードして手動でインポートすることもできます。
+
+[Releases](https://github.com/blurfeng/unity-urp-outline/releases) ページで最新版の `.unitypackage` をダウンロードし、Unity で **Assets → Import Package → Custom Package...** から選択してインポートしてください。
+
+> 💡 手動でインポートしたパッケージはリポジトリと連動して自動更新されません。バージョン管理が必要な場合は、上記の UPM 方式を推奨します。
 
 ## 使用方法
 本プロジェクトはすでに基本設定済みです。直接利用することもできますし、以下の手順で自身のプロジェクトに統合することも可能です。

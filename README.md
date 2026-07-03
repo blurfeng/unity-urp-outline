@@ -16,7 +16,8 @@
 
 <p align="center">
   📥
-  <a href="#安装">安装</a>
+  <a href="#安装">安装</a> |
+  <a href="#下载">下载</a>
 </p>
 
 ## 简介
@@ -44,6 +45,13 @@ https://github.com/blurfeng/unity-urp-outline.git?path=/Assets/Plugins/FsOutline
 ```
 git clone https://github.com/blurfeng/unity-urp-outline.git
 ```
+
+## 下载
+除通过 UPM 安装外，你也可以从 GitHub Releases 下载安装包手动导入。
+
+前往 [Releases](https://github.com/blurfeng/unity-urp-outline/releases) 页面，下载最新版本的 `.unitypackage`，然后在 Unity 中通过 **Assets → Import Package → Custom Package...** 选择该文件导入即可。
+
+> 💡 手动导入的包不会随仓库自动更新，如需版本管理建议优先使用上方的 UPM 方式。
 
 ## 使用方式
 本项目已完成基础配置，你可以直接参考使用，或按照以下步骤将描边效果集成到自己的项目中。

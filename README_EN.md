@@ -16,7 +16,8 @@
 
 <p align="center">
   📥
-  <a href="#installation">Installation</a>
+  <a href="#installation">Installation</a> |
+  <a href="#download">Download</a>
 </p>
 
 ## Project Overview
@@ -44,6 +45,13 @@ This repository is itself a fully configured sample project. Clone it and open i
 ```
 git clone https://github.com/blurfeng/unity-urp-outline.git
 ```
+
+## Download
+Besides installing via UPM, you can also download a package from GitHub Releases and import it manually.
+
+Go to the [Releases](https://github.com/blurfeng/unity-urp-outline/releases) page, download the latest `.unitypackage`, then import it in Unity via **Assets → Import Package → Custom Package...**.
+
+> 💡 A manually imported package won't update automatically with the repository. For version management, prefer the UPM method above.
 
 ## How to Use
 This project has already been preconfigured. You can use it directly or follow the steps below to integrate the outline effect into your own project.
