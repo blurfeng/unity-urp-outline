@@ -1,19 +1,51 @@
-# 【Unity URP Outline】
----
+# Unity URP Outline
 
-### ***阅读中文文档 > [中文](README.md)***
-### ***Read this document in > [English](README_en.md)***
-### ***日本語のドキュメントを読む > [日本語](README_ja.md)***
+<p align="center">
+  <img alt="GitHub Release" src="https://img.shields.io/github/v/release/blurfeng/unity-urp-outline?color=blue">
+  <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/blurfeng/unity-urp-outline/total?color=green">
+  <img alt="GitHub Repo License" src="https://img.shields.io/badge/license-MIT-blueviolet">
+  <img alt="GitHub Repo Issues" src="https://img.shields.io/github/issues/blurfeng/unity-urp-outline?color=yellow">
+</p>
 
----
+<p align="center">
+  🌍
+  中文 |
+  <a href="./README_EN.md">English</a> |
+  <a href="./README_JA.md">日本語</a>
+</p>
 
-## 【项目简介】
-本项目基于 **Unity 2022.3.62f1** 的 **URP (14.0.12)** 渲染管线实现了一种外描边效果。  
-Shader 通过 **UV 采样与卷积计算** 达成描边渲染。
+<p align="center">
+  📥
+  <a href="#安装">安装</a>
+</p>
+
+## 简介
+本项目基于 **Unity 2022.3.62f3** 的 **URP (14.0.12)** 渲染管线实现了一种外描边效果。  
+Shader 通过 **UV 采样与卷积计算** 达成描边渲染。  
+描边功能已封装为 **UPM 包**（`com.fs.outline`），可直接安装到你自己的 URP 项目中使用。
 
 ![](Documents/OutlineDemo.gif)
 
-## 【使用方式】
+## 安装
+描边功能位于仓库子目录 `Assets/Plugins/FsOutline`，已封装为 UPM 包，依赖 **Universal RP 14.0.12**（`com.unity.render-pipelines.universal`）。请先确保你的项目已启用 URP。
+
+### 方式一：作为 UPM 包安装（推荐）
+在你的项目中打开 **Window → Package Manager**，点击左上角 **[+] → Add package from git URL**，输入以下地址：
+
+```
+https://github.com/blurfeng/unity-urp-outline.git?path=/Assets/Plugins/FsOutline
+```
+
+> 💡 可在 URL 末尾追加 `#<分支或标签>` 锁定版本，例如 `...FsOutline#main`。
+
+### 方式二：克隆整个仓库作为示例工程
+本仓库本身就是一个配置完整的示例工程。克隆后用 **Unity 2022.3.62f3** 打开，即可查看完整的描边配置与演示场景。
+
+```
+git clone https://github.com/blurfeng/unity-urp-outline.git
+```
+
+## 使用方式
 本项目已完成基础配置，你可以直接参考使用，或按照以下步骤将描边效果集成到自己的项目中。
 
 ### 1. 添加 Renderer Feature
@@ -36,12 +68,12 @@ Shader 通过 **UV 采样与卷积计算** 达成描边渲染。
 
 ![](Documents/Volume.png)
 
-## 【支持的参数】
+## 支持的参数
 - **HDR 颜色**：描边使用的高动态范围颜色，可呈现发光效果。  
 - **描边宽度**：基于 UV 采样实现。若宽度过大，可能在直角或规则形状处出现穿帮现象。  
 - **渲染层遮罩**：通过渲染层遮罩控制哪些物体会被描边。  
 
-## 【Rendering Layers 渲染层说明】
+## Rendering Layers 渲染层说明
 URP 提供了 **Rendering Layers** 来控制和区分渲染层。  
 **建议使用 Rendering Layers 而不是 Unity 内置的 Layer**，原因如下：
 
@@ -52,7 +84,7 @@ URP 提供了 **Rendering Layers** 来控制和区分渲染层。
 
 ![](Documents/RenderingLayers.png)
 
-⚠️ **注意事项**  
-目前 URP 并未提供从代码中直接读取 `UniversalRenderPipelineGlobalSettings.RenderingLayers` 的方式。  
-因此本项目使用了自定义脚本 **`ERenderingLayerMask`** 来控制渲染层。  
-使用时，请确保该脚本的设置与 **Rendering Layers 配置** 保持一致。  
+✅ **渲染层自动读取**  
+本包会从当前生效的 **URP 资产** 自动读取已配置的 Rendering Layers 名称。  
+配套的 `RenderingLayerMaskDrawer` 会把渲染层遮罩绘制成勾选式下拉框，选项即为上方 Global Settings 中配置的渲染层。  
+因此你对 Rendering Layers 的任何增删改都会自动反映到选项中，无需再手动同步任何脚本。  
