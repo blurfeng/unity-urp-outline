@@ -90,10 +90,12 @@ Shader "Custom/Outline"
                 };
 
                 // 使用 Sobel 算子计算边缘强度。
+                // 采样遮罩的覆盖度（alpha）而非颜色：物体内部 alpha=1、外部=0，与物体颜色无关，
+                // 避免纯蓝/纯绿/暗色物体因红通道无对比而检测不到轮廓。
                 half gx = 0; half gy = 0;
                 for (int i = 0; i < 8; i++)
                 {
-                    half mask = SAMPLE_TEXTURE2D_X(_OutlineMask, sampler_linear_clamp_OutlineMask, IN.uv + IN.offsets[i]).r;
+                    half mask = SAMPLE_TEXTURE2D_X(_OutlineMask, sampler_linear_clamp_OutlineMask, IN.uv + IN.offsets[i]).a;
                     gx += mask * kernel_x[i];
                     gy += mask * kernel_y[i];
                 }
@@ -102,8 +104,8 @@ Shader "Custom/Outline"
                 const half alpha = SAMPLE_TEXTURE2D_X(_OutlineMask, sampler_linear_clamp_OutlineMask, IN.uv).a;
                 
                 half4 col = _OutlineColor;
-                // 确保描边不会覆盖物体本身。当物体透明时，向内绘制一些描边。
-                col.a = saturate(abs(gx) + abs(gy)) * saturate(1.0 - alpha - 0.5);
+                // 确保描边不会覆盖物体本身：物体外部（alpha=0）取满不透明度，进入物体后线性衰减至 0（alpha≥0.5）。
+                col.a = saturate(abs(gx) + abs(gy)) * saturate(1.0 - alpha * 2.0);
                 
                 return col;
             }

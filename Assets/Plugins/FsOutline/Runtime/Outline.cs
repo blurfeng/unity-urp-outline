@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Color = UnityEngine.Color;
 
-namespace Volumes
+namespace Fs.Outline
 {
     [Serializable]
     public class Outline : VolumeComponent

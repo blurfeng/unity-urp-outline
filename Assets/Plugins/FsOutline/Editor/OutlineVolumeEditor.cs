@@ -1,9 +1,8 @@
 ﻿using UnityEditor;
 using UnityEditor.Rendering;
 using UnityEngine;
-using Fs.Outline.Editor;
 
-namespace Volumes
+namespace Fs.Outline.Editor
 {
     [CustomEditor(typeof(Outline))]
     public class OutlineVolumeEditor : VolumeComponentEditor
@@ -22,25 +21,31 @@ namespace Volumes
 
             var comp = (Outline)target;
 
+            EditorGUI.BeginChangeCheck();
+
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(13f);
 
             // 勾选框，控制 overrideState。
-            comp.outlineRenderingLayerMask.overrideState =
+            bool overrideState =
                 EditorGUILayout.Toggle(comp.outlineRenderingLayerMask.overrideState, GUILayout.Width(15f));
 
-            EditorGUI.BeginDisabledGroup(!comp.outlineRenderingLayerMask.overrideState);
-            // MaskField。渲染层名称从当前生效的 URP 资产自动读取。
             int mask = (int)comp.outlineRenderingLayerMask.value;
-            string[] names = RenderingLayerMaskGUI.GetRenderingLayerMaskNames(mask);
-            mask = EditorGUILayout.MaskField("Outline Rendering Layer Mask", mask, names);
-            comp.outlineRenderingLayerMask.value = unchecked((uint)mask);
-            EditorGUI.EndDisabledGroup();
+            using (new EditorGUI.DisabledScope(!overrideState))
+            {
+                // MaskField。渲染层名称从当前生效的 URP 资产自动读取。
+                string[] names = RenderingLayerMaskGUI.GetRenderingLayerMaskNames(mask);
+                mask = EditorGUILayout.MaskField("Outline Rendering Layer Mask", mask, names);
+            }
 
             EditorGUILayout.EndHorizontal();
 
-            if (GUI.changed)
+            if (EditorGUI.EndChangeCheck())
             {
+                // 记录 Undo 后再写回，支持撤销并正确标脏保存到 Volume Profile 资产。
+                Undo.RecordObject(comp, "Edit Outline Rendering Layer Mask");
+                comp.outlineRenderingLayerMask.overrideState = overrideState;
+                comp.outlineRenderingLayerMask.value = unchecked((uint)mask);
                 EditorUtility.SetDirty(comp);
             }
         }
