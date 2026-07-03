@@ -1,0 +1,22 @@
+{
+  "name": "com.fs.outline",
+  "version": "1.0.0",
+  "displayName": "Fs Outline",
+  "description": "URP 外描边 (screen-space outline) renderer feature for the Universal Render Pipeline. 通过 Rendering Layers 指定描边对象，支持通过 Volume 在运行时调节颜色与宽度。",
+  "unity": "2022.3",
+  "keywords": [
+    "urp",
+    "outline",
+    "描边",
+    "renderer-feature",
+    "rendering",
+    "post-processing"
+  ],
+  "author": {
+    "name": "BlurFeng",
+    "email": "ablegamesstudio@gmail.com"
+  },
+  "dependencies": {
+    "com.unity.render-pipelines.universal": "14.0.12"
+  }
+}
