@@ -1,10 +1,10 @@
 # Fs Outline
 
 URP 外描边（screen-space outline）Renderer Feature，适用于 Universal Render Pipeline。
-通过 Rendering Layers 指定描边对象，支持通过 Volume 在运行时调节颜色与宽度。
+通过 Rendering Layers 指定描边对象，支持通过 Volume 在运行时调节颜色、宽度、不透明度、边缘硬度等参数。
 
 A screen-space outline Renderer Feature for the Universal Render Pipeline (URP).
-Select outlined objects via Rendering Layers, and adjust color / width at runtime through a Volume override.
+Select outlined objects via Rendering Layers, and adjust color, width, opacity, edge hardness, and more at runtime through a Volume override.
 
 ## 文档 / Documentation
 

@@ -78,8 +78,14 @@ The settings in the Volume will then override the default configuration on the R
 
 ## Supported Parameters
 - **HDR Color**: The outline color in HDR, which can also create glowing effects.  
-- **Outline Width**: Implemented via UV sampling. Large widths may cause artifacts, especially around sharp corners or square edges.  
+- **Outline Width**: Implemented via UV sampling; the adjustable range has been widened (up to 0.05). Large widths may cause artifacts, especially around sharp corners or square edges.  
+- **Opacity**: Overall outline opacity (0–1).  
+- **Edge Hardness**: Controls the edge from soft (anti-aliased) to sharp, applied as a power exponent (>1 sharper/thinner, <1 softer/thicker).  
+- **Inner Penetration**: How deep the outline bleeds into the object — larger goes deeper, smaller hugs the outer edge.  
 - **Rendering Layer Mask**: Controls which objects are outlined through rendering layers.  
+- **Render Pass Event**: The pipeline stage at which the outline is drawn. A Renderer Feature-level setting (not overridden per-Volume at runtime); defaults to before post-processing.  
+
+> 💡 Color, width, opacity, edge hardness, inner penetration, and rendering layer mask can all be overridden at runtime via a **Volume**; Render Pass Event is a **Renderer Feature**-level setting.
 
 ## Rendering Layers Explanation
 URP provides **Rendering Layers** to control and distinguish rendering layers.  

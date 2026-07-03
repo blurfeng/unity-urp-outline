@@ -6,7 +6,10 @@ Shader "Custom/Outline"
     Properties
     {
         [HDR] _OutlineColor("Outline Color", Color) = (1, 1, 1, 1)
-        _OutlineWidth("Outline Width", Range(0.0, 0.01)) = 0.004
+        _OutlineWidth("Outline Width", Range(0.0, 0.05)) = 0.004
+        _OutlineOpacity("Outline Opacity", Range(0.0, 1.0)) = 1.0
+        _OutlineHardness("Outline Hardness", Range(0.25, 4.0)) = 1.0
+        _OutlinePenetration("Outline Penetration", Range(0.05, 1.0)) = 0.5
     }
     
     SubShader
@@ -49,6 +52,9 @@ Shader "Custom/Outline"
 
             half4 _OutlineColor;
             half _OutlineWidth;
+            half _OutlineOpacity;
+            half _OutlineHardness;
+            half _OutlinePenetration;
 
             Varying vert(Attribute IN)
             {
@@ -104,8 +110,17 @@ Shader "Custom/Outline"
                 const half alpha = SAMPLE_TEXTURE2D_X(_OutlineMask, sampler_linear_clamp_OutlineMask, IN.uv).a;
                 
                 half4 col = _OutlineColor;
-                // 确保描边不会覆盖物体本身：物体外部（alpha=0）取满不透明度，进入物体后线性衰减至 0（alpha≥0.5）。
-                col.a = saturate(abs(gx) + abs(gy)) * saturate(1.0 - alpha * 2.0);
+
+                // 边缘强度：Sobel 梯度幅值。_OutlineHardness 作为幂次整形，>1 更锐利、<1 更柔和。
+                half edge = saturate(abs(gx) + abs(gy));
+                edge = pow(edge, _OutlineHardness);
+
+                // 内部衰减：确保描边不覆盖物体本身。物体外部（alpha=0）为满，向内部渐隐；
+                // _OutlinePenetration 为衰减到 0 处的覆盖度，越大向内部渗入越深（0.5 等价旧版 1 - alpha*2）。
+                half inner = saturate(1.0 - alpha / _OutlinePenetration);
+
+                // 叠加整体不透明度。
+                col.a = edge * inner * _OutlineOpacity;
                 
                 return col;
             }

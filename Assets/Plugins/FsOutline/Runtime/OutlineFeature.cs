@@ -22,6 +22,9 @@ namespace Fs.Outline
             private static readonly int _outlineMaskId = Shader.PropertyToID("_OutlineMask");
             private static readonly int _outlineColorId = Shader.PropertyToID("_OutlineColor");
             private static readonly int _outlineWidthId = Shader.PropertyToID("_OutlineWidth");
+            private static readonly int _outlineOpacityId = Shader.PropertyToID("_OutlineOpacity");
+            private static readonly int _outlineHardnessId = Shader.PropertyToID("_OutlineHardness");
+            private static readonly int _outlinePenetrationId = Shader.PropertyToID("_OutlinePenetration");
 
             private readonly OutlineSettings _defaultSettings;
             private readonly Material _outlineMaterial;
@@ -29,10 +32,10 @@ namespace Fs.Outline
             private readonly MaterialPropertyBlock _propertyBlock;
             private RTHandle _outlineMaskRT;
 
-            public OutlinePass(Material outlineMaterial, OutlineSettings defaultSettings)
+            public OutlinePass(Material outlineMaterial, OutlineSettings defaultSettings, RenderPassEvent renderPassEvent)
             {
                 // Configures where the render pass should be injected.
-                renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
+                this.renderPassEvent = renderPassEvent;
 
                 _outlineMaterial = outlineMaterial;
                 _defaultSettings = defaultSettings;
@@ -131,6 +134,15 @@ namespace Fs.Outline
                 float outlineWidth = isActive && volumeComponent.outlineWidth.overrideState ?
                     volumeComponent.outlineWidth.value : _defaultSettings.outlineWidth;
 
+                float outlineOpacity = isActive && volumeComponent.outlineOpacity.overrideState ?
+                    volumeComponent.outlineOpacity.value : _defaultSettings.outlineOpacity;
+
+                float outlineHardness = isActive && volumeComponent.outlineHardness.overrideState ?
+                    volumeComponent.outlineHardness.value : _defaultSettings.outlineHardness;
+
+                float outlinePenetration = isActive && volumeComponent.outlinePenetration.overrideState ?
+                    volumeComponent.outlinePenetration.value : _defaultSettings.outlinePenetration;
+
                 uint outlineRenderingLayerMask = isActive && volumeComponent.outlineRenderingLayerMask.overrideState ?
                     volumeComponent.outlineRenderingLayerMask.value : (uint)_defaultSettings.outlineRenderingLayerMask;
                 // 更新过滤设置，最终应用于渲染。
@@ -139,10 +151,17 @@ namespace Fs.Outline
                 // 设置外描边材质属性。
                 _outlineMaterial.SetColor(_outlineColorId, outlineColor);
                 _outlineMaterial.SetFloat(_outlineWidthId, outlineWidth);
+                _outlineMaterial.SetFloat(_outlineOpacityId, outlineOpacity);
+                _outlineMaterial.SetFloat(_outlineHardnessId, outlineHardness);
+                _outlineMaterial.SetFloat(_outlinePenetrationId, outlinePenetration);
             }
         }
 
         [SerializeField] private Shader shader;
+
+        // 描边 Pass 的注入时机。默认在后处理前绘制。属于 Feature 级设置，不随 Volume 运行时切换。
+        [SerializeField] private RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
+
         [SerializeField] private OutlineSettings settings;
 
         private OutlinePass _outlinePass;
@@ -167,7 +186,7 @@ namespace Fs.Outline
 
             // 使用 shader 创建材质，并创建 Pass。
             _outlineMaterial = new Material(shader);
-            _outlinePass = new OutlinePass(_outlineMaterial, settings);
+            _outlinePass = new OutlinePass(_outlineMaterial, settings, renderPassEvent);
         }
 
         // Here you can inject one or multiple render passes in the renderer.

@@ -90,13 +90,22 @@ MonoBehaviour:
   active: 1
   isActive:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
   outlineColor:
     m_OverrideState: 1
     m_Value: {r: 5.3403134, g: 5.3403134, b: 2.0907829, a: 1}
   outlineWidth:
     m_OverrideState: 1
-    m_Value: 0.002
+    m_Value: 0.0036
+  outlineOpacity:
+    m_OverrideState: 1
+    m_Value: 1
+  outlineHardness:
+    m_OverrideState: 1
+    m_Value: 1.09
+  outlinePenetration:
+    m_OverrideState: 1
+    m_Value: 0.418
   outlineRenderingLayerMask:
     m_OverrideState: 1
     m_Value: 3
