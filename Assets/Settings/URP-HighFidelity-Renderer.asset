@@ -17,7 +17,8 @@ MonoBehaviour:
   settings:
     outlineColor: {r: 8.77774, g: 8.77774, b: 8.77774, a: 1}
     outlineWidth: 0.00277
-    outlineRenderingLayerMask: 2
+    outlineRenderingLayerMask:
+      _bits: 2
 --- !u!114 &-1878332245247344467
 MonoBehaviour:
   m_ObjectHideFlags: 0
