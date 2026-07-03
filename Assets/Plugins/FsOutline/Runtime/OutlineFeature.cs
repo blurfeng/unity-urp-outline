@@ -46,7 +46,7 @@ namespace Fs.Outline
                 _filteringSettings =
                     new FilteringSettings(
                         RenderQueueRange.all,
-                        renderingLayerMask: (uint)_defaultSettings.outlineRenderingLayerMask);
+                        renderingLayerMask: (uint)_defaultSettings.renderingLayerMask);
             }
 
             /// <summary>
@@ -128,32 +128,32 @@ namespace Fs.Outline
                 var volumeComponent = VolumeManager.instance.stack.GetComponent<Outline>();
                 bool isActive = volumeComponent != null && volumeComponent.isActive.value;
 
-                Color outlineColor = isActive && volumeComponent.outlineColor.overrideState ?
-                    volumeComponent.outlineColor.value : _defaultSettings.outlineColor;
+                Color color = isActive && volumeComponent.color.overrideState ?
+                    volumeComponent.color.value : _defaultSettings.color;
 
-                float outlineWidth = isActive && volumeComponent.outlineWidth.overrideState ?
-                    volumeComponent.outlineWidth.value : _defaultSettings.outlineWidth;
+                float width = isActive && volumeComponent.width.overrideState ?
+                    volumeComponent.width.value : _defaultSettings.width;
 
-                float outlineOpacity = isActive && volumeComponent.outlineOpacity.overrideState ?
-                    volumeComponent.outlineOpacity.value : _defaultSettings.outlineOpacity;
+                float opacity = isActive && volumeComponent.opacity.overrideState ?
+                    volumeComponent.opacity.value : _defaultSettings.opacity;
 
-                float outlineHardness = isActive && volumeComponent.outlineHardness.overrideState ?
-                    volumeComponent.outlineHardness.value : _defaultSettings.outlineHardness;
+                float hardness = isActive && volumeComponent.hardness.overrideState ?
+                    volumeComponent.hardness.value : _defaultSettings.hardness;
 
-                float outlinePenetration = isActive && volumeComponent.outlinePenetration.overrideState ?
-                    volumeComponent.outlinePenetration.value : _defaultSettings.outlinePenetration;
+                float penetration = isActive && volumeComponent.penetration.overrideState ?
+                    volumeComponent.penetration.value : _defaultSettings.penetration;
 
-                uint outlineRenderingLayerMask = isActive && volumeComponent.outlineRenderingLayerMask.overrideState ?
-                    volumeComponent.outlineRenderingLayerMask.value : (uint)_defaultSettings.outlineRenderingLayerMask;
+                uint renderingLayerMask = isActive && volumeComponent.renderingLayerMask.overrideState ?
+                    volumeComponent.renderingLayerMask.value : (uint)_defaultSettings.renderingLayerMask;
                 // 更新过滤设置，最终应用于渲染。
-                _filteringSettings.renderingLayerMask = outlineRenderingLayerMask;
+                _filteringSettings.renderingLayerMask = renderingLayerMask;
 
                 // 设置外描边材质属性。
-                _outlineMaterial.SetColor(_outlineColorId, outlineColor);
-                _outlineMaterial.SetFloat(_outlineWidthId, outlineWidth);
-                _outlineMaterial.SetFloat(_outlineOpacityId, outlineOpacity);
-                _outlineMaterial.SetFloat(_outlineHardnessId, outlineHardness);
-                _outlineMaterial.SetFloat(_outlinePenetrationId, outlinePenetration);
+                _outlineMaterial.SetColor(_outlineColorId, color);
+                _outlineMaterial.SetFloat(_outlineWidthId, width);
+                _outlineMaterial.SetFloat(_outlineOpacityId, opacity);
+                _outlineMaterial.SetFloat(_outlineHardnessId, hardness);
+                _outlineMaterial.SetFloat(_outlinePenetrationId, penetration);
             }
         }
 
