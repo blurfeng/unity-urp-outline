@@ -84,6 +84,10 @@ namespace Fs.Outline
             // You don't have to call ScriptableRenderContext.submit, the render pipeline will call it at specific points in the pipeline.
             public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
             {
+                // 材质可能在本 Pass 入队后、执行前被 Create()/Dispose() 销毁（首次打开场景时资源重导入常触发）。
+                // 材质缺失时直接跳过本 Pass，避免向 DrawProcedural 传入 null 材质而抛 ArgumentNullException。
+                if (_outlineMaterial == null) return;
+
                 // 更新设置。
                 UpdateSettings();
 
@@ -169,6 +173,8 @@ namespace Fs.Outline
 
         private OutlinePass _outlinePass;
         private Material _outlineMaterial;
+        // 避免 Shader 缺失时每帧重复输出警告。
+        private bool _shaderWarningLogged;
 
         /// <inheritdoc/>
         public override void Create()
@@ -180,15 +186,24 @@ namespace Fs.Outline
             CoreUtils.Destroy(_outlineMaterial);
             _outlineMaterial = null;
 
+            // 优先使用序列化引用的 Shader；首次导入项目时该引用可能因资源导入时序而暂为空，
+            // 此时从 Resources 兜底加载（Outline.shader 位于 Resources 目录）。
+            Shader outlineShader = shader != null ? shader : Resources.Load<Shader>("Outline");
+
             // 检查 Shader 是否可用。
-            if (!shader || !shader.isSupported)
+            if (!outlineShader || !outlineShader.isSupported)
             {
-                Debug.LogWarning("OutlineFeature: Missing or unsupported Outline Shader.");
+                if (!_shaderWarningLogged)
+                {
+                    Debug.LogWarning("OutlineFeature: Missing or unsupported Outline Shader.");
+                    _shaderWarningLogged = true;
+                }
                 return;
             }
+            _shaderWarningLogged = false;
 
             // 使用 shader 创建材质，并创建 Pass。
-            _outlineMaterial = new Material(shader);
+            _outlineMaterial = new Material(outlineShader);
             _outlinePass = new OutlinePass(_outlineMaterial, settings, renderPassEvent);
         }
 
@@ -196,7 +211,12 @@ namespace Fs.Outline
         // This method is called when setting up the renderer once per-camera.
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            if (_outlinePass == null)
+            // 惰性补建资源。首次打开场景时 Create() 可能早于 Shader 导入完成而未能创建材质，
+            // 表现为“必须先运行一次才出现描边”。此处在真正渲染前再尝试创建一次，确保进入场景第一帧即可显示。
+            if (_outlinePass == null || _outlineMaterial == null)
+                Create();
+
+            if (_outlinePass == null || _outlineMaterial == null)
             {
                 // Debug.LogWarning($"OutlineFeature: Missing Outline Pass. {GetType().Name} render pass will not execute.");
                 return;
