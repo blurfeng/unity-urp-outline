@@ -34,8 +34,10 @@ namespace Fs.Outline.Editor
             using (new EditorGUI.DisabledScope(!overrideState))
             {
                 // MaskField。渲染层名称从当前生效的 URP 资产自动读取。
+                // 用 GUIContent 挂 tooltip：本字段 [HideInInspector] 且为手绘，字段上的 [Tooltip] 不会生效。
+                var label = new GUIContent("Rendering Layer Mask", "通过渲染层（Rendering Layers）控制哪些物体会被描边。");
                 string[] names = RenderingLayerMaskGUI.GetRenderingLayerMaskNames(mask);
-                mask = EditorGUILayout.MaskField("Rendering Layer Mask", mask, names);
+                mask = EditorGUILayout.MaskField(label, mask, names);
             }
 
             EditorGUILayout.EndHorizontal();

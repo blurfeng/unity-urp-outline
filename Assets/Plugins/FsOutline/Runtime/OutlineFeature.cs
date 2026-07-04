@@ -157,11 +157,14 @@ namespace Fs.Outline
             }
         }
 
+        [Tooltip("描边使用的 Shader，通常保持默认（内置 Outline.shader）。")]
         [SerializeField] private Shader shader;
 
         // 描边 Pass 的注入时机。默认在后处理前绘制。属于 Feature 级设置，不随 Volume 运行时切换。
+        [Tooltip("描边在渲染管线中的注入时机，属 Renderer Feature 级设置（不随 Volume 运行时切换），默认在后处理前绘制。")]
         [SerializeField] private RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
 
+        [Tooltip("描边的默认设置。可被场景中的 Volume（Outline 组件）在运行时覆盖。")]
         [SerializeField] private OutlineSettings settings;
 
         private OutlinePass _outlinePass;
