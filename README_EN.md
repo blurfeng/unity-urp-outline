@@ -1,3 +1,5 @@
+![](Documents/OutlineDemo.gif)
+
 <p align="center">
   <img alt="GitHub Release" src="https://img.shields.io/github/v/release/blurfeng/unity-urp-outline?color=blue">
   <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/blurfeng/unity-urp-outline/total?color=green">
@@ -21,9 +23,6 @@
 # Unity URP Outline
 This project implements an outline effect based on **Unity 2022.3.62f3** with the **URP (14.0.12)** rendering pipeline.  
 The shader achieves the outline effect using **UV sampling and convolution calculation**.  
-The outline feature is packaged as a **UPM package** (`com.fs.outline`) and can be installed directly into your own URP project.
-
-![](Documents/OutlineDemo.gif)
 
 ## Installation
 The outline feature lives in the repository subfolder `Assets/Plugins/FsOutline` and is shipped as a UPM package. It depends on **Universal RP 14.0.12** (`com.unity.render-pipelines.universal`), so make sure URP is enabled in your project.

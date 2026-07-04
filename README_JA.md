@@ -1,3 +1,5 @@
+![](Documents/OutlineDemo.gif)
+
 <p align="center">
   <img alt="GitHub Release" src="https://img.shields.io/github/v/release/blurfeng/unity-urp-outline?color=blue">
   <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/blurfeng/unity-urp-outline/total?color=green">
@@ -21,9 +23,6 @@
 # Unity URP Outline
 本プロジェクトは **Unity 2022.3.62f3** の **URP (14.0.12)** レンダリングパイプラインを用いて、アウトライン効果を実装しています。  
 Shader は **UV サンプリングと畳み込み計算** によりアウトラインを描画します。  
-アウトライン機能は **UPM パッケージ**（`com.fs.outline`）として提供されており、自身の URP プロジェクトに直接インストールして利用できます。
-
-![](Documents/OutlineDemo.gif)
 
 ## インストール
 アウトライン機能はリポジトリのサブフォルダ `Assets/Plugins/FsOutline` にあり、UPM パッケージとして提供されています。**Universal RP 14.0.12**（`com.unity.render-pipelines.universal`）に依存するため、プロジェクトで URP が有効になっていることを確認してください。

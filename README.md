@@ -1,3 +1,5 @@
+![](Documents/OutlineDemo.gif)
+
 <p align="center">
   <img alt="GitHub Release" src="https://img.shields.io/github/v/release/blurfeng/unity-urp-outline?color=blue">
   <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/blurfeng/unity-urp-outline/total?color=green">
@@ -21,9 +23,6 @@
 # Unity URP Outline
 本项目基于 **Unity 2022.3.62f3** 的 **URP (14.0.12)** 渲染管线实现了一种外描边效果。  
 Shader 通过 **UV 采样与卷积计算** 达成描边渲染。  
-描边功能已封装为 **UPM 包**（`com.fs.outline`），可直接安装到你自己的 URP 项目中使用。
-
-![](Documents/OutlineDemo.gif)
 
 ## 安装
 描边功能位于仓库子目录 `Assets/Plugins/FsOutline`，已封装为 UPM 包，依赖 **Universal RP 14.0.12**（`com.unity.render-pipelines.universal`）。请先确保你的项目已启用 URP。
