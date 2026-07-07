@@ -91,12 +91,15 @@ MonoBehaviour:
   IsActive:
     m_OverrideState: 1
     m_Value: 1
+  ExpandMode:
+    m_OverrideState: 1
+    m_Value: 1
   Color:
     m_OverrideState: 1
     m_Value: {r: 4, g: 4, b: 2, a: 1}
   Width:
     m_OverrideState: 1
-    m_Value: 0.005
+    m_Value: 0.006
   Opacity:
     m_OverrideState: 1
     m_Value: 1

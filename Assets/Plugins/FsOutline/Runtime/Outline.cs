@@ -5,12 +5,25 @@ using Color = UnityEngine.Color;
 
 namespace Fs.Outline
 {
+    /// <summary>
+    /// 外描边扩展算法的 Volume 参数（Inspector 自动生成枚举下拉）。
+    /// </summary>
+    [Serializable]
+    public sealed class OutlineExpandModeParameter : VolumeParameter<OutlineExpandMode>
+    {
+        public OutlineExpandModeParameter(OutlineExpandMode value, bool overrideState = false)
+            : base(value, overrideState) { }
+    }
+
     [Serializable]
     public class Outline : VolumeComponent
     {
         [Tooltip("是否启用本 Volume 的描边覆盖。关闭时回退到 Renderer Feature 的默认设置。")]
         public BoolParameter IsActive = new BoolParameter(true, true);
-        
+
+        [Tooltip("外描边扩展算法。Dilate：轻量 8 抽样膨胀，大宽度会八边形穿帮；JumpFlood：真实距离场，任意宽度都平滑等宽（推荐）；SeparableBlur：辉光式软边；")]
+        public OutlineExpandModeParameter ExpandMode = new OutlineExpandModeParameter(OutlineExpandMode.JumpFlood);
+
         [Tooltip("描边使用的高动态范围（HDR）颜色，可呈现发光效果。")]
         public ColorParameter Color = new ColorParameter(new Color(4f,4f,2f, 1f), true, true, true);
 
