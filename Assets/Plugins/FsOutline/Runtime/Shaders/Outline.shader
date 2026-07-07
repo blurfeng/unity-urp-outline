@@ -101,19 +101,15 @@ Shader "Custom/Outline"
 
             // 来自“被覆盖采样点 sampleUV（物体所在处）”的描边贡献，在描边像素 P 处是否可见。
             // 需同时满足两个条件，缺一即剔除：
-            //   1) 物体表面自身未被更靠前的不透明物体遮挡（在采样点处比较目标深度与场景深度）；
-            //      —— 这样即便描边外扩出遮挡者边缘，只要所描的那段物体被挡，也会被隐藏。
-            //   2) 描边像素 P 处也没有比该物体更靠前的不透明物体挡着（用 P 处的场景深度比较）；
-            //      —— 这样外描边会在遮挡者边缘被精准裁切，不会戳进遮挡物内部。
+            // 描边像素 P 处也没有比该物体更靠前的不透明物体挡着（用 P 处的场景深度比较）；
+            // 这样外描边会在遮挡者边缘被精准裁切，不会戳进遮挡物内部。
             // sceneEyeP 为 P 处场景最前深度（预先算好，避免重复采样）。返回 1 可见、0 被遮挡。
             half OutlineSampleVisible(float2 sampleUV, float sceneEyeP)
             {
                 float objDepth = SampleMaskEyeDepth(sampleUV);
-                float sceneAtSample = LinearEyeDepth(SampleSceneDepth(sampleUV), _ZBufferParams);
                 // 留 1% 相对偏置抗深度精度抖动。
-                half surfaceVisible = step(objDepth * 0.99, sceneAtSample); // 条件 1：物体表面未被遮挡
-                half visibleAtPixel = step(objDepth * 0.99, sceneEyeP);     // 条件 2：描边像素处未被更近物体覆盖
-                return surfaceVisible * visibleAtPixel;
+                half visibleAtPixel = step(objDepth * 0.99, sceneEyeP); // 描边像素处未被更近物体覆盖
+                return visibleAtPixel;
             }
 
             half4 frag(Varying IN) : SV_Target
