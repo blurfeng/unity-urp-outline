@@ -88,25 +88,25 @@ MonoBehaviour:
   m_Name: Outline
   m_EditorClassIdentifier: 
   active: 1
-  isActive:
+  IsActive:
     m_OverrideState: 1
     m_Value: 1
-  color:
+  Color:
     m_OverrideState: 1
-    m_Value: {r: 5.3403134, g: 5.3403134, b: 2.0907829, a: 1}
-  width:
+    m_Value: {r: 4, g: 4, b: 2, a: 1}
+  Width:
     m_OverrideState: 1
-    m_Value: 0.0036
-  opacity:
-    m_OverrideState: 1
-    m_Value: 1
-  hardness:
-    m_OverrideState: 1
-    m_Value: 0.1
-  occlusionCulling:
+    m_Value: 0.005
+  Opacity:
     m_OverrideState: 1
     m_Value: 1
-  renderingLayerMask:
+  Hardness:
+    m_OverrideState: 1
+    m_Value: 0.01
+  OcclusionCulling:
+    m_OverrideState: 1
+    m_Value: 1
+  RenderingLayerMask:
     m_OverrideState: 1
     m_Value: 2
 --- !u!114 &11400000

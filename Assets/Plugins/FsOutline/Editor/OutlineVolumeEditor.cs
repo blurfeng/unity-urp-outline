@@ -28,9 +28,9 @@ namespace Fs.Outline.Editor
 
             // 勾选框，控制 overrideState。
             bool overrideState =
-                EditorGUILayout.Toggle(comp.renderingLayerMask.overrideState, GUILayout.Width(15f));
+                EditorGUILayout.Toggle(comp.RenderingLayerMask.overrideState, GUILayout.Width(15f));
 
-            int mask = (int)comp.renderingLayerMask.value;
+            int mask = (int)comp.RenderingLayerMask.value;
             using (new EditorGUI.DisabledScope(!overrideState))
             {
                 // MaskField。渲染层名称从当前生效的 URP 资产自动读取。
@@ -46,8 +46,8 @@ namespace Fs.Outline.Editor
             {
                 // 记录 Undo 后再写回，支持撤销并正确标脏保存到 Volume Profile 资产。
                 Undo.RecordObject(comp, "Edit Outline Rendering Layer Mask");
-                comp.renderingLayerMask.overrideState = overrideState;
-                comp.renderingLayerMask.value = unchecked((uint)mask);
+                comp.RenderingLayerMask.overrideState = overrideState;
+                comp.RenderingLayerMask.value = unchecked((uint)mask);
                 EditorUtility.SetDirty(comp);
             }
         }

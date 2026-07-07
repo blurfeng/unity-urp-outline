@@ -79,10 +79,10 @@ namespace Fs.Outline
             public bool ResolveOcclusion()
             {
                 var volumeComponent = VolumeManager.instance.stack.GetComponent<Outline>();
-                bool isActive = volumeComponent != null && volumeComponent.isActive.value;
+                bool isActive = volumeComponent != null && volumeComponent.IsActive.value;
 
-                return isActive && volumeComponent.occlusionCulling.overrideState ?
-                    volumeComponent.occlusionCulling.value : _defaultSettings.occlusionCulling;
+                return isActive && volumeComponent.OcclusionCulling.overrideState ?
+                    volumeComponent.OcclusionCulling.value : _defaultSettings.occlusionCulling;
             }
 
             // This method is called before executing the render pass.
@@ -200,28 +200,28 @@ namespace Fs.Outline
 
                 // 获取 Volume 设置或使用默认值。
                 var volumeComponent = VolumeManager.instance.stack.GetComponent<Outline>();
-                bool isActive = volumeComponent != null && volumeComponent.isActive.value;
+                bool isActive = volumeComponent != null && volumeComponent.IsActive.value;
 
-                Color color = isActive && volumeComponent.color.overrideState ?
-                    volumeComponent.color.value : _defaultSettings.color;
+                Color color = isActive && volumeComponent.Color.overrideState ?
+                    volumeComponent.Color.value : _defaultSettings.color;
 
-                float width = isActive && volumeComponent.width.overrideState ?
-                    volumeComponent.width.value : _defaultSettings.width;
+                float width = isActive && volumeComponent.Width.overrideState ?
+                    volumeComponent.Width.value : _defaultSettings.width;
 
-                float opacity = isActive && volumeComponent.opacity.overrideState ?
-                    volumeComponent.opacity.value : _defaultSettings.opacity;
+                float opacity = isActive && volumeComponent.Opacity.overrideState ?
+                    volumeComponent.Opacity.value : _defaultSettings.opacity;
 
-                float hardness = isActive && volumeComponent.hardness.overrideState ?
-                    volumeComponent.hardness.value : _defaultSettings.hardness;
+                float hardness = isActive && volumeComponent.Hardness.overrideState ?
+                    volumeComponent.Hardness.value : _defaultSettings.hardness;
 
-                uint renderingLayerMask = isActive && volumeComponent.renderingLayerMask.overrideState ?
-                    volumeComponent.renderingLayerMask.value : (uint)_defaultSettings.renderingLayerMask;
+                uint renderingLayerMask = isActive && volumeComponent.RenderingLayerMask.overrideState ?
+                    volumeComponent.RenderingLayerMask.value : (uint)_defaultSettings.renderingLayerMask;
                 // 更新过滤设置，最终应用于渲染。
                 _filteringSettings.renderingLayerMask = renderingLayerMask;
 
                 // 遮挡剔除开关同步到字段，供 Execute 决定是否绑定目标深度缓冲（深度 RT 已在 OnCameraSetup 依此分配）。
-                _occlusionCulling = isActive && volumeComponent.occlusionCulling.overrideState ?
-                    volumeComponent.occlusionCulling.value : _defaultSettings.occlusionCulling;
+                _occlusionCulling = isActive && volumeComponent.OcclusionCulling.overrideState ?
+                    volumeComponent.OcclusionCulling.value : _defaultSettings.occlusionCulling;
 
                 // 设置外描边材质属性。
                 _outlineMaterial.SetColor(_outlineColorId, color);
