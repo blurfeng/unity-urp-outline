@@ -4,6 +4,11 @@ All notable changes to the `com.fs.outline` package are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-07
+
+### Added
+- **Occlusion Culling** — a Volume-overridable toggle (with a Feature-level default). When enabled, the parts of an outlined object hidden behind other geometry are no longer outlined. The outlined objects write their own depth into a dedicated mask depth buffer (using each object's own material, so alpha-clipped materials keep working); the resolve pass then hides any outline pixel where the scene's front-most surface is closer than the object. The mask coverage is never cut, so no spurious edges are drawn along the occluders. The camera depth texture is requested automatically, only while occlusion is on.
+
 ## [1.1.0] - 2026-07-04
 
 ### Added
@@ -38,5 +43,6 @@ Initial release.
 - Adjustable parameters: HDR color, outline width, rendering layer mask.
 - Distributed as a UPM package, installable via Git URL subfolder.
 
+[1.2.0]: https://github.com/blurfeng/unity-urp-outline/releases/tag/v1.2.0
 [1.1.0]: https://github.com/blurfeng/unity-urp-outline/releases/tag/v1.1.0
 [1.0.0]: https://github.com/blurfeng/unity-urp-outline/releases/tag/v1.0.0

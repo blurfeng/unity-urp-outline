@@ -25,12 +25,21 @@ namespace Fs.Outline
             private static readonly int _outlineOpacityId = Shader.PropertyToID("_OutlineOpacity");
             private static readonly int _outlineHardnessId = Shader.PropertyToID("_OutlineHardness");
             private static readonly int _outlinePenetrationId = Shader.PropertyToID("_OutlinePenetration");
+            private static readonly int _outlineOcclusionId = Shader.PropertyToID("_OutlineOcclusion");
+            private static readonly int _outlineMaskDepthId = Shader.PropertyToID("_OutlineMaskDepth");
 
             private readonly OutlineSettings _defaultSettings;
             private readonly Material _outlineMaterial;
             private FilteringSettings _filteringSettings;
             private readonly MaterialPropertyBlock _propertyBlock;
             private RTHandle _outlineMaskRT;
+            // 遮罩的目标深度缓冲：只含被描边物体自身深度（由物体材质 ZWrite 写入），可被解析 Shader 采样。
+            // 供遮挡剔除（与场景深度比较）使用。
+            private RTHandle _outlineMaskDepthRT;
+
+            // 由 ResolveOcclusion / UpdateSettings 解析出的当前生效遮挡剔除开关。开启时需要为遮罩
+            // 附带一张可采样的目标深度缓冲（OnCameraSetup 分配、Execute 绑定）。
+            private bool _occlusionCulling;
 
             public OutlinePass(Material outlineMaterial, OutlineSettings defaultSettings, RenderPassEvent renderPassEvent)
             {
@@ -56,6 +65,21 @@ namespace Fs.Outline
             {
                 _outlineMaskRT?.Release();
                 _outlineMaskRT = null;
+                _outlineMaskDepthRT?.Release();
+                _outlineMaskDepthRT = null;
+            }
+
+            /// <summary>
+            /// 解析当前生效的遮挡剔除开关（Volume 覆盖优先，否则回退 Feature 默认）。
+            /// 需要在 AddRenderPasses（决定是否请求深度图）与 OnCameraSetup（决定 RT 是否带深度）中提前得知。
+            /// </summary>
+            public bool ResolveOcclusion()
+            {
+                var volumeComponent = VolumeManager.instance.stack.GetComponent<Outline>();
+                bool isActive = volumeComponent != null && volumeComponent.isActive.value;
+
+                return isActive && volumeComponent.occlusionCulling.overrideState ?
+                    volumeComponent.occlusionCulling.value : _defaultSettings.occlusionCulling;
             }
 
             // This method is called before executing the render pass.
@@ -66,16 +90,32 @@ namespace Fs.Outline
             public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
             {
                 ResetTarget();
+                // 提前解析开关：遮挡剔除需要一张可采样的目标深度缓冲。
+                _occlusionCulling = ResolveOcclusion();
+
                 // 使用当前相机的渲染目标描述符来配置RT。
                 RenderTextureDescriptor desc = renderingData.cameraData.cameraTargetDescriptor;
                 // 不需要太高的抗锯齿，因为只是需要外描边目标的遮罩。
                 desc.msaaSamples = 1;
-                // 不需要深度缓冲。
+                // 颜色格式带 Alpha 记录覆盖度；深度单独分配到 _outlineMaskDepthRT，故此处不带深度。
                 desc.depthBufferBits = 0;
-                // 选择有Alpha通道的颜色格式，后续处理需要。
                 desc.colorFormat = RenderTextureFormat.ARGB32;
                 // 分配 Mask RT。
                 RenderingUtils.ReAllocateIfNeeded(ref _outlineMaskRT, desc, name:"_OutlineMaskRT");
+
+                // 目标深度缓冲：分配为可采样的深度纹理。物体用自身材质绘制遮罩时 ZWrite 写入其真实深度，
+                // 解析阶段据此做遮挡剔除（与场景深度比较）。仅在遮挡剔除开启时分配。
+                if (_occlusionCulling)
+                {
+                    RenderTextureDescriptor depthDesc = renderingData.cameraData.cameraTargetDescriptor;
+                    depthDesc.msaaSamples = 1;
+                    // 可采样的深度纹理（与 URP 生成 _CameraDepthTexture 同一套路），32 位保证远处精度。
+                    depthDesc.colorFormat = RenderTextureFormat.Depth;
+                    depthDesc.depthBufferBits = 32;
+                    RenderingUtils.ReAllocateIfNeeded(
+                        ref _outlineMaskDepthRT, depthDesc, FilterMode.Point, TextureWrapMode.Clamp,
+                        name: "_OutlineMaskDepthRT");
+                }
             }
 
             // Here you can implement the rendering logic.
@@ -95,9 +135,15 @@ namespace Fs.Outline
                 var cmd = CommandBufferPool.Get("Outline");
 
                 // ---- 遮罩 RT ---- //
-                // 设置绘制目标为_outlineMaskRT。并在渲染前清空RT。
-                cmd.SetRenderTarget(_outlineMaskRT);
-                cmd.ClearRenderTarget(true, true, Color.clear);
+                // 遮挡剔除时，把目标深度缓冲一并绑定：物体用自身材质绘制遮罩时会 ZWrite 写入其真实深度，
+                // 遮罩覆盖度保持完整（不做遮挡切割），遮挡判定留到解析阶段处理。
+                if (_occlusionCulling)
+                    CoreUtils.SetRenderTarget(cmd, _outlineMaskRT, _outlineMaskDepthRT, ClearFlag.All, Color.clear);
+                else
+                {
+                    cmd.SetRenderTarget(_outlineMaskRT);
+                    cmd.ClearRenderTarget(true, true, Color.clear);
+                }
 
                 // 设置绘制属性并添加。
                 var drawingSettings = CreateDrawingSettings(_shaderTagIds, ref  renderingData, SortingCriteria.None);
@@ -109,8 +155,10 @@ namespace Fs.Outline
                 // ---- 外描边 ---- //
                 // 设置绘制目标为当前相机的渲染目标。
                 cmd.SetRenderTarget(renderingData.cameraData.renderer.cameraColorTargetHandle);
-                // 设置外描边材质属性块，传入 Mask RT。
+                // 设置外描边材质属性块，传入 Mask RT（及遮挡剔除时的目标深度）。
                 _propertyBlock.SetTexture(_outlineMaskId, _outlineMaskRT);
+                if (_occlusionCulling)
+                    _propertyBlock.SetTexture(_outlineMaskDepthId, _outlineMaskDepthRT);
                 // 绘制一个全屏三角形，使用外描边材质，并传入属性块。
                 cmd.DrawProcedural(Matrix4x4.identity, _outlineMaterial, 0, MeshTopology.Triangles, 3, 1, _propertyBlock);
 
@@ -152,12 +200,17 @@ namespace Fs.Outline
                 // 更新过滤设置，最终应用于渲染。
                 _filteringSettings.renderingLayerMask = renderingLayerMask;
 
+                // 遮挡剔除开关同步到字段，供 Execute 决定是否绑定目标深度缓冲（深度 RT 已在 OnCameraSetup 依此分配）。
+                _occlusionCulling = isActive && volumeComponent.occlusionCulling.overrideState ?
+                    volumeComponent.occlusionCulling.value : _defaultSettings.occlusionCulling;
+
                 // 设置外描边材质属性。
                 _outlineMaterial.SetColor(_outlineColorId, color);
                 _outlineMaterial.SetFloat(_outlineWidthId, width);
                 _outlineMaterial.SetFloat(_outlineOpacityId, opacity);
                 _outlineMaterial.SetFloat(_outlineHardnessId, hardness);
                 _outlineMaterial.SetFloat(_outlinePenetrationId, penetration);
+                _outlineMaterial.SetFloat(_outlineOcclusionId, _occlusionCulling ? 1f : 0f);
             }
         }
 
@@ -226,6 +279,10 @@ namespace Fs.Outline
             var cameraType = renderingData.cameraData.cameraType;
             if (cameraType == CameraType.Preview || cameraType == CameraType.Reflection)
                 return;
+
+            // 遮挡剔除需要相机场景深度（与目标自身深度比较）。仅在其开启时请求，避免无谓地强制生成深度纹理。
+            _outlinePass.ConfigureInput(_outlinePass.ResolveOcclusion() ?
+                ScriptableRenderPassInput.Depth : ScriptableRenderPassInput.None);
 
             // 将 Pass 注入渲染器队列。
             renderer.EnqueuePass(_outlinePass);

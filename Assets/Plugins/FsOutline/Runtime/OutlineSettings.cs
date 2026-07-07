@@ -25,6 +25,9 @@ namespace Fs.Outline
         [Tooltip("描边向物体内部渗入的深度，越大越深、越小越贴外缘。")]
         [Range(0.05f, 1f)] public float penetration = 0.5f;
 
+        [Tooltip("遮挡剔除：开启后，被其他物体遮挡的部分不绘制描边（需要相机深度图，会自动请求）。")]
+        public bool occlusionCulling = false;
+
         // 默认第 1 位（通常对应名为 "Outline" 的渲染层）。层名由 RenderingLayerMaskDrawer 从 URP 设置自动读取。
         // 2022.3：RenderingLayerMask 即本命名空间下的兼容垫片 Fs.Outline.RenderingLayerMask；
         // Unity 6：经上方 using 别名指向引擎内置的 UnityEngine.RenderingLayerMask。

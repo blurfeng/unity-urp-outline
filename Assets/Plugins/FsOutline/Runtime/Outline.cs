@@ -26,6 +26,9 @@ namespace Fs.Outline
         [Tooltip("描边向物体内部渗入的深度，越大越深、越小越贴外缘。")]
         public ClampedFloatParameter penetration = new ClampedFloatParameter(0.5f, 0.05f, 1f);
 
+        [Tooltip("遮挡剔除：开启后，被其他物体遮挡的部分不绘制描边（需要相机深度图，会自动请求）。")]
+        public BoolParameter occlusionCulling = new BoolParameter(false);
+
         [HideInInspector]
         public UIntParameter renderingLayerMask = new UIntParameter(2);
     }

@@ -106,9 +106,12 @@ MonoBehaviour:
   penetration:
     m_OverrideState: 1
     m_Value: 0.418
+  occlusionCulling:
+    m_OverrideState: 1
+    m_Value: 1
   renderingLayerMask:
     m_OverrideState: 1
-    m_Value: 3
+    m_Value: 2
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
