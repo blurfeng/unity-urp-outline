@@ -101,15 +101,21 @@ Shader "Custom/Outline"
                 return LinearEyeDepth(raw, _ZBufferParams);
             }
 
-            // 该 UV 处的“目标表面”是否可见：即目标自身深度处，没有更靠前的不透明物体挡在它前面。
-            // 注意：判定发生在“被覆盖的采样点（物体所在处）”，而非描边像素本身——这样即便描边向外
-            // 扩出遮挡者边缘，只要它所描的那段物体被挡住，依然会被正确隐藏。返回 1 可见、0 被遮挡。
-            half OutlineSurfaceVisible(float2 uv)
+            // 来自“被覆盖采样点 sampleUV（物体所在处）”的描边贡献，在描边像素 P 处是否可见。
+            // 需同时满足两个条件，缺一即剔除：
+            //   1) 物体表面自身未被更靠前的不透明物体遮挡（在采样点处比较目标深度与场景深度）；
+            //      —— 这样即便描边外扩出遮挡者边缘，只要所描的那段物体被挡，也会被隐藏。
+            //   2) 描边像素 P 处也没有比该物体更靠前的不透明物体挡着（用 P 处的场景深度比较）；
+            //      —— 这样外描边会在遮挡者边缘被精准裁切，不会戳进遮挡物内部。
+            // sceneEyeP 为 P 处场景最前深度（预先算好，避免重复采样）。返回 1 可见、0 被遮挡。
+            half OutlineSampleVisible(float2 sampleUV, float sceneEyeP)
             {
-                float objDepth = SampleMaskEyeDepth(uv);
-                float sceneDepth = LinearEyeDepth(SampleSceneDepth(uv), _ZBufferParams);
-                // 场景最前表面不明显近于目标 => 目标可见。留 1% 相对偏置抗深度精度抖动。
-                return step(objDepth * 0.99, sceneDepth);
+                float objDepth = SampleMaskEyeDepth(sampleUV);
+                float sceneAtSample = LinearEyeDepth(SampleSceneDepth(sampleUV), _ZBufferParams);
+                // 留 1% 相对偏置抗深度精度抖动。
+                half surfaceVisible = step(objDepth * 0.99, sceneAtSample); // 条件 1：物体表面未被遮挡
+                half visibleAtPixel = step(objDepth * 0.99, sceneEyeP);     // 条件 2：描边像素处未被更近物体覆盖
+                return surfaceVisible * visibleAtPixel;
             }
 
             half4 frag(Varying IN) : SV_Target
@@ -132,12 +138,18 @@ Shader "Custom/Outline"
 
                 const bool occlusion = _OutlineOcclusion > 0.5;
 
-                // 遮挡剔除：描边是否可见，取决于它所描的物体表面在被覆盖采样点处是否未被遮挡。
-                // 只要中心或任一被覆盖邻域处的目标表面可见，就显示这根描边（物体露出的部分照常描边）。
+                // 预先取描边像素 P 处的场景最前深度（用于条件 2 的边缘裁切判定）。仅遮挡剔除时需要。
+                float sceneEyeP = 0;
+                UNITY_BRANCH
+                if (occlusion)
+                    sceneEyeP = LinearEyeDepth(SampleSceneDepth(IN.uv), _ZBufferParams);
+
+                // 遮挡剔除：描边是否可见，取决于它所描的物体表面是否未被遮挡，且描边像素处未被更近物体覆盖。
+                // 只要中心或任一被覆盖邻域的贡献可见，就显示这根描边（物体露出的部分照常描边）。
                 half visible = 0;
                 UNITY_BRANCH
                 if (occlusion && alpha > 0.5)
-                    visible = OutlineSurfaceVisible(IN.uv);
+                    visible = OutlineSampleVisible(IN.uv, sceneEyeP);
 
                 // 使用 Sobel 算子计算边缘强度。采样遮罩的覆盖度（alpha）而非颜色，
                 // 得到与物体颜色无关的稳定轮廓。
@@ -149,10 +161,10 @@ Shader "Custom/Outline"
                     gx += mask * kernel_x[i];
                     gy += mask * kernel_y[i];
 
-                    // 遮挡剔除：在被覆盖的邻域采样点（物体所在处）判定目标表面可见性。
+                    // 遮挡剔除：在被覆盖的邻域采样点（物体所在处）判定其对本描边像素的可见贡献。
                     UNITY_BRANCH
                     if (occlusion && mask > 0.5)
-                        visible = max(visible, OutlineSurfaceVisible(uv));
+                        visible = max(visible, OutlineSampleVisible(uv, sceneEyeP));
                 }
 
                 half4 col = _OutlineColor;
