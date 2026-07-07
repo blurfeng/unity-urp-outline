@@ -90,7 +90,7 @@ MonoBehaviour:
   active: 1
   isActive:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
   color:
     m_OverrideState: 1
     m_Value: {r: 5.3403134, g: 5.3403134, b: 2.0907829, a: 1}
@@ -102,7 +102,7 @@ MonoBehaviour:
     m_Value: 1
   hardness:
     m_OverrideState: 1
-    m_Value: 1.09
+    m_Value: 0.72
   penetration:
     m_OverrideState: 1
     m_Value: 0.418

@@ -28,6 +28,10 @@ namespace Fs.Outline
             private static readonly int _outlineOcclusionId = Shader.PropertyToID("_OutlineOcclusion");
             private static readonly int _outlineMaskDepthId = Shader.PropertyToID("_OutlineMaskDepth");
 
+            // Outline.shader 的 Pass 索引。0：全屏解析；1：遮罩覆盖度（作为透明队列的 overrideMaterial）。
+            private const int ResolvePassIndex = 0;
+            private const int MaskCoveragePassIndex = 1;
+
             private readonly OutlineSettings _defaultSettings;
             private readonly Material _outlineMaterial;
             private FilteringSettings _filteringSettings;
@@ -135,7 +139,7 @@ namespace Fs.Outline
                 var cmd = CommandBufferPool.Get("Outline");
 
                 // ---- 遮罩 RT ---- //
-                // 遮挡剔除时，把目标深度缓冲一并绑定：物体用自身材质绘制遮罩时会 ZWrite 写入其真实深度，
+                // 遮挡剔除时，把目标深度缓冲一并绑定：物体绘制遮罩时会 ZWrite 写入其真实深度，
                 // 遮罩覆盖度保持完整（不做遮挡切割），遮挡判定留到解析阶段处理。
                 if (_occlusionCulling)
                     CoreUtils.SetRenderTarget(cmd, _outlineMaskRT, _outlineMaskDepthRT, ClearFlag.All, Color.clear);
@@ -144,13 +148,32 @@ namespace Fs.Outline
                     cmd.SetRenderTarget(_outlineMaskRT);
                     cmd.ClearRenderTarget(true, true, Color.clear);
                 }
+                // 先把渲染目标绑定与清屏 flush 出去，使其对随后的 context.DrawRenderers 生效。
+                // DrawRenderers 直接绘制到“当前已绑定的 RT”，若不先执行本 cmd，绘制会发生在绑定之前。
+                context.ExecuteCommandBuffer(cmd);
+                cmd.Clear();
 
-                // 设置绘制属性并添加。
-                var drawingSettings = CreateDrawingSettings(_shaderTagIds, ref  renderingData, SortingCriteria.None);
-                var rendererListParams = new RendererListParams(renderingData.cullResults, drawingSettings, _filteringSettings);
-                var list = context.CreateRendererList(ref rendererListParams);
-                // 绘制一批已有的渲染器。这里的来源是 context（场景中的 Mesh Renderer），但我们指定了过滤，只绘制我们想要的物体。
-                cmd.DrawRendererList(list);
+                // ---- 绘制遮罩 ---- //
+                // 遮罩需要“几何覆盖度”：物体所在处 alpha=1、否则 0，与材质自身透明度无关。按渲染队列拆分绘制：
+                //  · 不透明 / cutout 队列：用物体自身材质绘制，保留 alpha 裁剪，且不透明输出 alpha≈1，覆盖度天然正确；
+                //    遮挡剔除开启时其 ZWrite 也会把真实深度写入 _OutlineMaskDepth。
+                //  · 透明队列：改用 overrideMaterial（本 Shader 的覆盖度 Pass）强制输出 alpha=1 并 ZWrite；
+                //    否则透明材质混合后的低 alpha 会被当成“几乎没有覆盖”，导致透明物体描不出边、也无法参与遮挡判定。
+                // 用 context.DrawRenderers（而非 RendererList）以便对透明队列指定 overrideMaterial。
+                var drawingSettings = CreateDrawingSettings(_shaderTagIds, ref renderingData, SortingCriteria.None);
+
+                // 不透明队列：物体自身材质。
+                var opaqueFiltering = _filteringSettings;
+                opaqueFiltering.renderQueueRange = RenderQueueRange.opaque;
+                context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref opaqueFiltering);
+
+                // 透明队列：覆盖度替换材质（本材质的覆盖度 Pass，强制 alpha=1 + ZWrite）。
+                var transparentDrawing = drawingSettings;
+                transparentDrawing.overrideMaterial = _outlineMaterial;
+                transparentDrawing.overrideMaterialPassIndex = MaskCoveragePassIndex;
+                var transparentFiltering = _filteringSettings;
+                transparentFiltering.renderQueueRange = RenderQueueRange.transparent;
+                context.DrawRenderers(renderingData.cullResults, ref transparentDrawing, ref transparentFiltering);
 
                 // ---- 外描边 ---- //
                 // 设置绘制目标为当前相机的渲染目标。
@@ -159,8 +182,8 @@ namespace Fs.Outline
                 _propertyBlock.SetTexture(_outlineMaskId, _outlineMaskRT);
                 if (_occlusionCulling)
                     _propertyBlock.SetTexture(_outlineMaskDepthId, _outlineMaskDepthRT);
-                // 绘制一个全屏三角形，使用外描边材质，并传入属性块。
-                cmd.DrawProcedural(Matrix4x4.identity, _outlineMaterial, 0, MeshTopology.Triangles, 3, 1, _propertyBlock);
+                // 绘制一个全屏三角形，使用外描边材质的解析 Pass，并传入属性块。
+                cmd.DrawProcedural(Matrix4x4.identity, _outlineMaterial, ResolvePassIndex, MeshTopology.Triangles, 3, 1, _propertyBlock);
 
                 // ---- 执行绘制 ---- //
                 context.ExecuteCommandBuffer(cmd);
