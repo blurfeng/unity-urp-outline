@@ -8,8 +8,7 @@ Shader "Custom/Outline"
         [HDR] _OutlineColor("Outline Color", Color) = (1, 1, 1, 1)
         _OutlineWidth("Outline Width", Range(0.0, 0.05)) = 0.004
         _OutlineOpacity("Outline Opacity", Range(0.0, 1.0)) = 1.0
-        _OutlineHardness("Outline Hardness", Range(0.25, 4.0)) = 1.0
-        _OutlinePenetration("Outline Penetration", Range(0.05, 1.0)) = 0.5
+        _OutlineHardness("Outline Hardness", Range(0.1, 4.0)) = 0.1
         _OutlineOcclusion("Occlusion Culling", Float) = 0
     }
 
@@ -22,7 +21,7 @@ Shader "Custom/Outline"
         }
 
         // ---- Pass 0：全屏解析 ----
-        // 对遮罩覆盖度做 Sobel 得到描边，按需做遮挡剔除，再混合回相机颜色目标。
+        // 对遮罩覆盖度做邻域平均得到描边过渡带，按需做遮挡剔除，再混合回相机颜色目标。
         Pass
         {
             Name "OutlineResolve"
@@ -66,7 +65,6 @@ Shader "Custom/Outline"
             half _OutlineWidth;
             half _OutlineOpacity;
             half _OutlineHardness;
-            half _OutlinePenetration;
             half _OutlineOcclusion;
 
             Varying vert(Attribute IN)
@@ -120,18 +118,6 @@ Shader "Custom/Outline"
 
             half4 frag(Varying IN) : SV_Target
             {
-                // Sobel 算子核。
-                const half kernel_y[8] = {
-                    -1, -2, -1,
-                     0,      0,
-                     1,  2,  1,
-                };
-                const half kernel_x[8] = {
-                    -1,  0,  1,
-                    -2,      2,
-                    -1,  0,  1,
-                };
-
                 // 读取中心遮罩覆盖度（alpha）。物体内部 alpha=1、外部=0，与物体颜色无关，
                 // 避免纯蓝/纯绿/暗色物体因红通道无对比而检测不到轮廓。
                 const half alpha = SAMPLE_TEXTURE2D_X(_OutlineMask, sampler_linear_clamp_OutlineMask, IN.uv).a;
@@ -151,33 +137,34 @@ Shader "Custom/Outline"
                 if (occlusion && alpha > 0.5)
                     visible = OutlineSampleVisible(IN.uv, sceneEyeP);
 
-                // 使用 Sobel 算子计算边缘强度。采样遮罩的覆盖度（alpha）而非颜色，
-                // 得到与物体颜色无关的稳定轮廓。
-                half gx = 0; half gy = 0;
+                // 邻域平均覆盖度：对中心 + 8 环样本取平均，得到随“到轮廓的有符号距离”平滑变化的场
+                // cov —— 外远处→0、轮廓处→0.5、内远处→1。仅用于外描边衰减，使 Hardness 能对连续的
+                // 过渡带整形（二值覆盖度下边缘强度恒饱和为 1、Hardness 无效）。内侧裁切另用逐像素 alpha。
+                half covSum = alpha;
                 for (int i = 0; i < 8; i++)
                 {
                     float2 uv = IN.uv + IN.offsets[i];
                     half mask = SAMPLE_TEXTURE2D_X(_OutlineMask, sampler_linear_clamp_OutlineMask, uv).a;
-                    gx += mask * kernel_x[i];
-                    gy += mask * kernel_y[i];
+                    covSum += mask;
 
                     // 遮挡剔除：在被覆盖的邻域采样点（物体所在处）判定其对本描边像素的可见贡献。
                     UNITY_BRANCH
                     if (occlusion && mask > 0.5)
                         visible = max(visible, OutlineSampleVisible(uv, sceneEyeP));
                 }
+                half cov = covSum / 9.0;
 
                 half4 col = _OutlineColor;
 
-                // 边缘强度：Sobel 梯度幅值。_OutlineHardness 作为幂次整形，>1 更锐利、<1 更柔和。
-                half edge = saturate(abs(gx) + abs(gy));
-                edge = pow(edge, _OutlineHardness);
+                // 外描边衰减：以轮廓为峰、向外衰减的带。cov∈[0,0.5] 线性映射到 [0,1]，
+                // 再由 _OutlineHardness 幂次整形：越大越锐越细（强度更贴近轮廓），越小越柔越粗。
+                half outer = pow(saturate(cov * 2.0), _OutlineHardness);
 
-                // 内部衰减：确保描边不覆盖物体本身。物体外部（alpha=0）为满，向内部渐隐；
-                // _OutlinePenetration 为衰减到 0 处的覆盖度，越大向内部渗入越深（0.5 等价旧版 1 - alpha*2）。
-                half inner = saturate(1.0 - alpha / _OutlinePenetration);
+                // 内侧裁切：用中心像素覆盖度逐像素地把描边限制在物体外部，边界严格贴合真实轮廓，
+                // 转角保持干净（不用粗糙的邻域平均 cov，避免转角处等值线抖动造成锯齿）。
+                half inner = 1.0 - alpha;
 
-                half outlineA = edge * inner;
+                half outlineA = outer * inner;
 
                 // 遮挡剔除：被更靠前不透明物体挡住的物体表面，其描边不绘制。
                 // 遮罩保持满覆盖、外轮廓不被切割，因此不会沿遮挡者轮廓产生多余边缘。

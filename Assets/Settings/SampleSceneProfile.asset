@@ -102,10 +102,7 @@ MonoBehaviour:
     m_Value: 1
   hardness:
     m_OverrideState: 1
-    m_Value: 0.72
-  penetration:
-    m_OverrideState: 1
-    m_Value: 0.418
+    m_Value: 0.1
   occlusionCulling:
     m_OverrideState: 1
     m_Value: 1

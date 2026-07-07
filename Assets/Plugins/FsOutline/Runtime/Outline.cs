@@ -20,11 +20,8 @@ namespace Fs.Outline
         [Tooltip("描边整体不透明度（0–1）。")]
         public ClampedFloatParameter opacity = new ClampedFloatParameter(1f, 0f, 1f);
 
-        [Tooltip("边缘由柔和到锐利，作为幂次整形（>1 更锐利更细，<1 更柔和更粗）。")]
-        public ClampedFloatParameter hardness = new ClampedFloatParameter(1f, 0.25f, 4f);
-
-        [Tooltip("描边向物体内部渗入的深度，越大越深、越小越贴外缘。")]
-        public ClampedFloatParameter penetration = new ClampedFloatParameter(0.5f, 0.05f, 1f);
+        [Tooltip("边缘由柔和到锐利，作为幂次整形（越大越锐越细、越小越柔越粗）。默认 0.1 复现均匀实心的外描边带。")]
+        public ClampedFloatParameter hardness = new ClampedFloatParameter(0.1f, 0.1f, 4f);
 
         [Tooltip("遮挡剔除：开启后，被其他物体遮挡的部分不绘制描边（需要相机深度图，会自动请求）。")]
         public BoolParameter occlusionCulling = new BoolParameter(false);

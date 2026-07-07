@@ -24,7 +24,6 @@ namespace Fs.Outline
             private static readonly int _outlineWidthId = Shader.PropertyToID("_OutlineWidth");
             private static readonly int _outlineOpacityId = Shader.PropertyToID("_OutlineOpacity");
             private static readonly int _outlineHardnessId = Shader.PropertyToID("_OutlineHardness");
-            private static readonly int _outlinePenetrationId = Shader.PropertyToID("_OutlinePenetration");
             private static readonly int _outlineOcclusionId = Shader.PropertyToID("_OutlineOcclusion");
             private static readonly int _outlineMaskDepthId = Shader.PropertyToID("_OutlineMaskDepth");
 
@@ -215,9 +214,6 @@ namespace Fs.Outline
                 float hardness = isActive && volumeComponent.hardness.overrideState ?
                     volumeComponent.hardness.value : _defaultSettings.hardness;
 
-                float penetration = isActive && volumeComponent.penetration.overrideState ?
-                    volumeComponent.penetration.value : _defaultSettings.penetration;
-
                 uint renderingLayerMask = isActive && volumeComponent.renderingLayerMask.overrideState ?
                     volumeComponent.renderingLayerMask.value : (uint)_defaultSettings.renderingLayerMask;
                 // 更新过滤设置，最终应用于渲染。
@@ -232,7 +228,6 @@ namespace Fs.Outline
                 _outlineMaterial.SetFloat(_outlineWidthId, width);
                 _outlineMaterial.SetFloat(_outlineOpacityId, opacity);
                 _outlineMaterial.SetFloat(_outlineHardnessId, hardness);
-                _outlineMaterial.SetFloat(_outlinePenetrationId, penetration);
                 _outlineMaterial.SetFloat(_outlineOcclusionId, _occlusionCulling ? 1f : 0f);
             }
         }
