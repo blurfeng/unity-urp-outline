@@ -74,15 +74,22 @@ The settings in the Volume will then override the default configuration on the R
 ![](Documents/Volume.png)
 
 ## Supported Parameters
+- **Expand Mode**: Selects how the outer outline is expanded from the mask. **JumpFlood** (default) — a true Euclidean distance field, smooth and uniform-width at any width; **SeparableBlur** — a soft, glow-like edge; **Dilate** — a lightweight 8-tap dilation, cheapest but turns octagonal at large widths.  
 - **HDR Color**: The outline color in HDR, which can also create glowing effects.  
-- **Outline Width**: Implemented via UV sampling; the adjustable range has been widened (up to 0.05). Large widths may cause artifacts, especially around sharp corners or square edges.  
+- **Outline Width**: Implemented via UV sampling; the adjustable range has been widened (up to 0.05). Under JumpFlood / SeparableBlur large widths stay smooth; only Dilate turns octagonal around sharp corners or square edges.  
 - **Opacity**: Overall outline opacity (0–1).  
-- **Edge Hardness**: Controls the edge from soft (anti-aliased) to sharp, applied as a power exponent (>1 sharper/thinner, <1 softer/thicker).  
-- **Inner Penetration**: How deep the outline bleeds into the object — larger goes deeper, smaller hugs the outer edge.  
+- **Edge Hardness**: A power-curve shaping of the edge falloff (larger = sharper/thinner, smaller = softer/thicker); a low value reproduces a uniform, solid outline band.  
+- **Occlusion Culling**: When enabled, parts of an outlined object hidden behind other geometry are no longer outlined (the camera depth texture is requested automatically, only while this is on).  
 - **Rendering Layer Mask**: Controls which objects are outlined through rendering layers.  
 - **Render Pass Event**: The pipeline stage at which the outline is drawn. A Renderer Feature-level setting (not overridden per-Volume at runtime); defaults to before post-processing.  
 
-> 💡 Color, width, opacity, edge hardness, inner penetration, and rendering layer mask can all be overridden at runtime via a **Volume**; Render Pass Event is a **Renderer Feature**-level setting.
+> 💡 Objects using transparent or alpha-clipped materials are now outlined correctly.  
+> 💡 Expand mode, color, width, opacity, edge hardness, occlusion culling, and rendering layer mask can all be overridden at runtime via a **Volume**; Render Pass Event is a **Renderer Feature**-level setting.
+
+### Expand Mode Comparison
+The image below compares the three expand modes at a large width: Dilate turns octagonal, JumpFlood stays smooth and uniform-width, and SeparableBlur gives a soft glow edge.
+
+![](Documents/ExpandMode.png)
 
 ## Rendering Layers Explanation
 URP provides **Rendering Layers** to control and distinguish rendering layers.  

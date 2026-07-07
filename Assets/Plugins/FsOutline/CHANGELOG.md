@@ -4,10 +4,22 @@ All notable changes to the `com.fs.outline` package are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2026-07-07
+## [1.2.0] - 2026-07-08
 
 ### Added
-- **Occlusion Culling** — a Volume-overridable toggle (with a Feature-level default). When enabled, the parts of an outlined object hidden behind other geometry are no longer outlined. The outlined objects write their own depth into a dedicated mask depth buffer (using each object's own material, so alpha-clipped materials keep working); the resolve pass then hides any outline pixel where the scene's front-most surface is closer than the object. The mask coverage is never cut, so no spurious edges are drawn along the occluders. The camera depth texture is requested automatically, only while occlusion is on.
+- **Expand Mode** — a Volume-overridable setting that selects how the outer outline is expanded from the mask. **Jump Flood (JFA)** builds a true Euclidean distance field and stays smooth and uniform-width at any width (default); **Separable Blur** yields a soft, glow-like edge; **Dilate** is the lightweight 8-tap morphological dilation — cheapest, but turns octagonal at large widths.
+- **Occlusion Culling** — a Volume-overridable toggle (with a Feature-level default). When enabled, the parts of an outlined object hidden behind other geometry are no longer outlined. The camera depth texture is requested automatically, only while occlusion is on.
+- **Transparent object support** — objects using transparent or alpha-clipped materials now generate correct mask coverage and are outlined properly.
+
+### Changed
+- **Edge Hardness** reworked into a power-curve shaping of the edge falloff (larger = sharper/thinner, smaller = softer/thicker); a low value reproduces a uniform, solid outline band.
+- Renamed the configurable Feature and Volume fields to PascalCase (`Color`, `Width`, `Opacity`, `Hardness`, `OcclusionCulling`, `ExpandMode`, `RenderingLayerMask`). **Breaking:** references configured under 1.1.0 must be reassigned after upgrading.
+
+### Fixed
+- The outline no longer bleeds slightly over occluding geometry when Occlusion Culling is on; the visible edge is now trimmed precisely against the nearer surface.
+
+### Removed
+- **Inner Penetration** parameter — removed. The outline's inner falloff is now shaped by Edge Hardness. **Breaking:** any Feature or Volume override of Inner Penetration no longer applies.
 
 ## [1.1.0] - 2026-07-04
 
