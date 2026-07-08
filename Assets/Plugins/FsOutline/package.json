@@ -18,5 +18,12 @@
   },
   "dependencies": {
     "com.unity.render-pipelines.universal": "14.0.12"
-  }
+  },
+  
+  "samples": [
+    {
+      "displayName": "Samples",
+      "path": "Samples~"
+    }
+  ]
 }
