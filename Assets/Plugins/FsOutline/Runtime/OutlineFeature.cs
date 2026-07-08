@@ -413,7 +413,7 @@ namespace Fs.Outline
         [SerializeField] private RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
 
         [Tooltip("描边的默认设置。可被场景中的 Volume（Outline 组件）在运行时覆盖。")]
-        [SerializeField] private OutlineSettings settings;
+        [SerializeField] private OutlineSettings settings = new OutlineSettings();
 
         private OutlinePass _outlinePass;
         private Material _outlineMaterial;
@@ -423,6 +423,10 @@ namespace Fs.Outline
         /// <inheritdoc/>
         public override void Create()
         {
+            // 全新添加 Feature 时，settings 可能因尚无序列化数据而为 null（构造函数会访问它，null 会抛 NRE）。
+            // 兜底补建一个默认实例；之后若有已保存数据反序列化进来，只会覆盖它，对现有工程无影响。
+            if (settings == null) settings = new OutlineSettings();
+
             // Create 可能在未调用 Dispose 的情况下被重复调用（例如在 Inspector 中修改设置触发 OnValidate）。
             // 先释放上一次创建的资源，避免 Material 与 RTHandle 泄漏。
             _outlinePass?.Dispose();
