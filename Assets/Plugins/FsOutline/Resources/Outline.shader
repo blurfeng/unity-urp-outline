@@ -8,7 +8,7 @@ Shader "Custom/Outline"
         [HDR] _OutlineColor("Outline Color", Color) = (1, 1, 1, 1)
         _OutlineWidth("Outline Width", Range(0.0, 0.05)) = 0.004
         _OutlineOpacity("Outline Opacity", Range(0.0, 1.0)) = 1.0
-        _OutlineHardness("Outline Hardness", Range(0.1, 4.0)) = 0.1
+        _OutlineHardness("Outline Hardness", Range(0.01, 4.0)) = 0.01
         _OutlineOcclusion("Occlusion Culling", Float) = 0
     }
 

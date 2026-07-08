@@ -91,6 +91,17 @@ The image below compares the three expand modes at a large width: Dilate turns o
 
 ![](Documents/ExpandMode.png)
 
+### Performance Comparison
+The relative cost of the three expand modes can be estimated from **number of full-screen passes + per-pixel taps + intermediate RTs** (actual cost varies with GPU, resolution, and outline width — profile with the Frame Debugger / GPU Profiler for real numbers):
+
+| Expand Mode | Full-screen passes | Intermediate RTs | Grows with width |
+| --- | --- | --- | --- |
+| **Dilate** | 1 | none | No |
+| **SeparableBlur** | 3 (fixed) | 2× R8 | No |
+| **JumpFlood** | 2 + N (N ≈ ⌈log₂(width × screen-width px)⌉, typically 3–7) | 2× RGFloat | Yes |
+
+Overall ordering is **Dilate < SeparableBlur < JumpFlood**: Dilate is cheapest (a single resolve pass); SeparableBlur sits in the middle and is fixed (horizontal + vertical Gaussian + resolve, independent of width); JumpFlood has the best quality but the highest cost — the jump-iteration count grows with width (log₂), and it uses high-precision RGFloat distance-field targets with heavier bandwidth.
+
 ## Rendering Layers Explanation
 URP provides **Rendering Layers** to control and distinguish rendering layers.  
 It is **recommended to use Rendering Layers instead of Unity's built-in Layer**, for the following reasons:

@@ -91,6 +91,17 @@ git clone https://github.com/blurfeng/unity-urp-outline.git
 
 ![](Documents/ExpandMode.png)
 
+### 性能对比
+三种扩展算法的相对开销可从「全屏 Pass 数 + 每像素抽样 + 中间 RT」客观估计（真实开销随 GPU、分辨率、描边宽度而变，请以 Frame Debugger / GPU Profiler 实测为准）：
+
+| 扩展算法 | 全屏 Pass 数 | 中间 RT | 是否随宽度增长 |
+| --- | --- | --- | --- |
+| **Dilate** | 1 | 无 | 否 |
+| **SeparableBlur** | 3（固定） | 2× R8 | 否 |
+| **JumpFlood** | 2 + N（N ≈ ⌈log₂(宽度 × 屏幕横向像素)⌉，常见 3~7） | 2× RGFloat | 是 |
+
+整体开销排序 **Dilate ＜ SeparableBlur ＜ JumpFlood**：Dilate 最省（单个解析 Pass）；SeparableBlur 居中且固定（横向 + 纵向高斯 + 解析共 3 趟，与宽度无关）；JumpFlood 质量最好但最贵——跳跃迭代次数随宽度按 log₂ 增长，且中间用高精度 RGFloat 距离场，带宽压力更高。
+
 ## Rendering Layers 渲染层说明
 URP 提供了 **Rendering Layers** 来控制和区分渲染层。  
 **建议使用 Rendering Layers 而不是 Unity 内置的 Layer**，原因如下：
