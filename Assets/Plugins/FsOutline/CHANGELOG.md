@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Renamed the configurable Feature and Volume fields to PascalCase (`Color`, `Width`, `Opacity`, `Hardness`, `OcclusionCulling`, `ExpandMode`, `RenderingLayerMask`). **Breaking:** references configured under 1.1.0 must be reassigned after upgrading.
 
 ### Fixed
-- The outline no longer bleeds slightly over occluding geometry when Occlusion Culling is on; the visible edge is now trimmed precisely against the nearer surface.
+- With Occlusion Culling on, the outline no longer bleeds over occluding geometry, and the visible edge is trimmed precisely against the nearer surface. This now applies consistently across all three Expand Modes (Dilate, Jump Flood, Separable Blur) — Jump Flood and Separable Blur previously left a small gap where the outline met an occluder.
 
 ### Removed
 - **Inner Penetration** parameter — removed. The outline's inner falloff is now shaped by Edge Hardness. **Breaking:** any Feature or Volume override of Inner Penetration no longer applies.

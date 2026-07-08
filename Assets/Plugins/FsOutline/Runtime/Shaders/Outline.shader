@@ -416,19 +416,18 @@ Shader "Custom/Outline"
                 half inner = 1.0 - alpha;
                 half outlineA = outer * inner;
 
-                // 遮挡剔除：用“最近种子”（即所描物体表面点）的深度做两条件判定，
-                //  1) 该表面点未被更靠前的不透明物体遮挡；2) 描边像素处也未被更近物体覆盖（边缘精准裁切）。
+                // 遮挡剔除：用“最近种子”（即所描物体表面点）的深度判定——描边像素 P 处未被比该物体
+                // 更靠前的不透明物体覆盖。这样外描边在遮挡者边缘被精准裁切、完美贴合，不戳进遮挡物内部，
+                // 也不会因“最近种子恰好被遮挡”而在接触处产生缝隙。与 Dilate 模式的判定方式一致。
                 const bool occlusion = _OutlineOcclusion > 0.5;
                 UNITY_BRANCH
                 if (occlusion)
                 {
                     float2 seedUV = seed / _ScreenParams.xy;
                     float objDepth = SampleMaskEyeDepth(seedUV);
-                    float sceneAtSeed = LinearEyeDepth(SampleSceneDepth(seedUV), _ZBufferParams);
                     float sceneEyeP = LinearEyeDepth(SampleSceneDepth(IN.uv), _ZBufferParams);
-                    half surfaceVisible = step(objDepth * 0.99, sceneAtSeed);
                     half visibleAtPixel = step(objDepth * 0.99, sceneEyeP);
-                    outlineA *= surfaceVisible * visibleAtPixel;
+                    outlineA *= visibleAtPixel;
                 }
 
                 col.a = outlineA * _OutlineOpacity;
@@ -565,7 +564,7 @@ Shader "Custom/Outline"
 
         // ---- Pass 7：模糊解析 ----
         // 由平滑覆盖度场得到外描边过渡带（Hardness 整形），内侧裁切用逐像素 alpha。遮挡剔除沿用
-        // 环采样近似（在半径=宽度的 8 邻域里找被覆盖的物体点做两条件判定）。
+        // 环采样近似（在半径=宽度的 8 邻域里找被覆盖的物体点，判定描边像素处是否未被更近物体覆盖）。
         Pass
         {
             Name "OutlineResolveBlur"
@@ -628,14 +627,13 @@ Shader "Custom/Outline"
                 return LinearEyeDepth(raw, _ZBufferParams);
             }
 
-            // 与 Pass 0 一致的两条件可见性判定。
+            // 与 Pass 0 一致：只判“描边像素 P 处未被更近物体覆盖”，使外描边在遮挡者边缘精准裁切、
+            // 完美贴合，不在接触处产生缝隙。sceneEyeP 为 P 处场景最前深度。返回 1 可见、0 被遮挡。
             half OutlineSampleVisible(float2 sampleUV, float sceneEyeP)
             {
                 float objDepth = SampleMaskEyeDepth(sampleUV);
-                float sceneAtSample = LinearEyeDepth(SampleSceneDepth(sampleUV), _ZBufferParams);
-                half surfaceVisible = step(objDepth * 0.99, sceneAtSample);
                 half visibleAtPixel = step(objDepth * 0.99, sceneEyeP);
-                return surfaceVisible * visibleAtPixel;
+                return visibleAtPixel;
             }
 
             half4 frag(Varying IN) : SV_Target

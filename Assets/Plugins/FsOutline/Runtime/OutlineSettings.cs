@@ -12,17 +12,21 @@ namespace Fs.Outline
     public enum OutlineExpandMode
     {
         /// <summary>
-        /// 膨胀（轻量 8 抽样）：对遮罩做 8 邻域形态学膨胀。开销最低，但大宽度会八边形穿帮。
+        /// 膨胀（轻量 8 抽样）：对遮罩做 8 邻域形态学膨胀。三种模式里开销最低——只有单个全屏解析
+        /// Pass（9 抽样），不需要中间 RT。缺点是大宽度会八边形穿帮。
         /// </summary>
         Dilate,
 
         /// <summary>
-        /// 跳跃泛洪 JFA（推荐）
+        /// 跳跃泛洪 JFA（推荐）：构建真实欧氏距离场，任意宽度都平滑等宽。开销最高——播种 +
+        /// 若干次跳跃迭代（迭代次数随描边像素宽度按 log2 增长）+ 解析，常见约 5~9 个全屏 Pass，
+        /// 且中间要两张高精度 RGFloat 距离场贴图乒乓（带宽更高）。
         /// </summary>
         JumpFlood,
 
         /// <summary>
-        /// 可分离模糊
+        /// 可分离模糊：横向 + 纵向高斯得到平滑覆盖度场后再解析，辉光式软边。开销居中且固定——
+        /// 恒为 3 个全屏 Pass（两趟 12-tap 可分离高斯 + 解析），与描边宽度无关。
         /// </summary>
         SeparableBlur,
     }
@@ -30,7 +34,10 @@ namespace Fs.Outline
     [Serializable]
     public class OutlineSettings
     {
-        [Tooltip("外描边扩展算法。JumpFlood：真实距离场，任意宽度都平滑等宽（推荐）；SeparableBlur：辉光式软边；Dilate：轻量 8 抽样膨胀，大宽度会八边形穿帮。")]
+        [Tooltip("外描边扩展算法。性能开销 Dilate < SeparableBlur < JumpFlood。" +
+                 "JumpFlood：真实距离场，任意宽度都平滑等宽（推荐；开销最高，Pass 数随宽度增长）；" +
+                 "SeparableBlur：辉光式软边（恒 3 个全屏 Pass，居中）；" +
+                 "Dilate：轻量 8 抽样膨胀（最省，但大宽度会八边形穿帮）。")]
         public OutlineExpandMode ExpandMode = OutlineExpandMode.JumpFlood;
 
         [Tooltip("描边使用的高动态范围（HDR）颜色，可呈现发光效果。")]

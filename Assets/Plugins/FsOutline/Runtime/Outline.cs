@@ -21,7 +21,10 @@ namespace Fs.Outline
         [Tooltip("是否启用本 Volume 的描边覆盖。关闭时回退到 Renderer Feature 的默认设置。")]
         public BoolParameter IsActive = new BoolParameter(true, true);
 
-        [Tooltip("外描边扩展算法。Dilate：轻量 8 抽样膨胀，大宽度会八边形穿帮；JumpFlood：真实距离场，任意宽度都平滑等宽（推荐）；SeparableBlur：辉光式软边；")]
+        [Tooltip("外描边扩展算法。性能开销 Dilate < SeparableBlur < JumpFlood。" +
+                 "Dilate：轻量 8 抽样膨胀（最省，但大宽度会八边形穿帮）；" +
+                 "JumpFlood：真实距离场，任意宽度都平滑等宽（推荐；开销最高，Pass 数随宽度增长）；" +
+                 "SeparableBlur：辉光式软边（恒 3 个全屏 Pass，居中）。")]
         public OutlineExpandModeParameter ExpandMode = new OutlineExpandModeParameter(OutlineExpandMode.JumpFlood);
 
         [Tooltip("描边使用的高动态范围（HDR）颜色，可呈现发光效果。")]
